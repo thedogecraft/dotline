@@ -48,6 +48,12 @@ function Editor() {
     }
   }, [navInitial, setConfig])
 
+  useEffect(() => {
+    if (editingItemName) {
+      setSaveName(editingItemName)
+    }
+  }, [editingItemName])
+
   const handleChange = <K extends keyof CrosshairConfig>(
     key: K,
     value: CrosshairConfig[K]
@@ -177,7 +183,9 @@ function Editor() {
           </Button>
           <Button onClick={save}>Apply to Current</Button>
           <Button variant="outline" onClick={saveOverwriteOrNew}>
-            {editingItemName ? `Update "${editingItemName}"` : "Save to library"}
+            {editingExisting
+              ? `Update "${saveName.trim() || editingItemName}"`
+              : "Save to library"}
           </Button>
         </div>
       </header>
@@ -214,15 +222,23 @@ function Editor() {
 
           <Card className="mt-4">
             <CardHeader>
-              <CardTitle>Save to Library</CardTitle>
+              <CardTitle>{editingExisting ? "Name & Save" : "Save to Library"}</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center gap-2">
-              <Input
-                placeholder="Give your crosshair a name"
-                value={saveName}
-                onChange={(e) => setSaveName(e.target.value)}
-              />
-              <Button onClick={saveToLibrary}>{editingExisting ? "Save as New" : "Save"}</Button>
+            <CardContent className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder={editingExisting ? "Rename crosshair" : "Give your crosshair a name"}
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                />
+                <Button onClick={saveToLibrary}>{editingExisting ? "Save as New" : "Save"}</Button>
+              </div>
+              {editingExisting && (
+                <p className="text-xs text-muted-foreground">
+                  Change the name above and click <strong>Update</strong> in the header to save, or
+                  click <strong>Save as New</strong> to create a copy.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
