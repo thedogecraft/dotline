@@ -69,7 +69,10 @@ export function Crosshair({
   const colorWithOpacity = hexToRgba(config.color, config.opacity)
 
   // calculate center
-  const size = Math.max((config.length + config.gap) * 2 + config.thickness * 2, 64)
+  const size =
+    config.style === "image"
+      ? Math.max(config.imageSize ?? 32, 64)
+      : Math.max((config.length + config.gap) * 2 + config.thickness * 2, 64)
   const center = size / 2
 
   const renderCenterDot = () => {
@@ -235,15 +238,20 @@ export function CrosshairPreview({
   size?: number
 }) {
   // Reuse renderer but constrain SVG to preview size by scaling lengths to fit
-  const scale = Math.min(
-    1,
-    size / Math.max((config.length + config.gap) * 2 + config.thickness * 2, 64)
-  )
+  const baseSize =
+    config.style === "image"
+      ? Math.max(config.imageSize ?? 32, 64)
+      : Math.max((config.length + config.gap) * 2 + config.thickness * 2, 64)
+  const scale = Math.min(1, size / baseSize)
   const scaled: CrosshairConfig = {
     ...config,
-    length: Math.max(1, Math.round(config.length * scale)),
-    gap: Math.max(0, Math.round(config.gap * scale)),
-    thickness: Math.max(1, Math.round(config.thickness * scale))
+    ...(config.style === "image"
+      ? { imageSize: Math.max(1, Math.round((config.imageSize ?? 32) * scale)) }
+      : {
+          length: Math.max(1, Math.round(config.length * scale)),
+          gap: Math.max(0, Math.round(config.gap * scale)),
+          thickness: Math.max(1, Math.round(config.thickness * scale))
+        })
   }
   return (
     <div

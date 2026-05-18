@@ -155,14 +155,21 @@ function Editor() {
   }
 
   const scaleConfigForPreview = (cfg: CrosshairConfig, size: number): CrosshairConfig => {
-    const base = Math.max((cfg.length + cfg.gap) * 2 + cfg.thickness * 2, 64)
+    const base =
+      cfg.style === "image"
+        ? Math.max(cfg.imageSize ?? 32, 64)
+        : Math.max((cfg.length + cfg.gap) * 2 + cfg.thickness * 2, 64)
     const scale = Math.min(1, size / base)
     return {
       ...cfg,
       enabled: true,
-      length: Math.max(1, Math.round(cfg.length * scale)),
-      gap: Math.max(0, Math.round(cfg.gap * scale)),
-      thickness: Math.max(1, Math.round(cfg.thickness * scale))
+      ...(cfg.style === "image"
+        ? { imageSize: Math.max(1, Math.round((cfg.imageSize ?? 32) * scale)) }
+        : {
+            length: Math.max(1, Math.round(cfg.length * scale)),
+            gap: Math.max(0, Math.round(cfg.gap * scale)),
+            thickness: Math.max(1, Math.round(cfg.thickness * scale))
+          })
     }
   }
 
@@ -183,9 +190,7 @@ function Editor() {
           </Button>
           <Button onClick={save}>Apply to Current</Button>
           <Button variant="outline" onClick={saveOverwriteOrNew}>
-            {editingExisting
-              ? `Update "${saveName.trim() || editingItemName}"`
-              : "Save to library"}
+            {editingExisting ? `Update "${saveName.trim() || editingItemName}"` : "Save to library"}
           </Button>
         </div>
       </header>
@@ -325,7 +330,7 @@ function Editor() {
                 </div>
                 <div className="gap-3 flex flex-col">
                   <div className="flex justify-between">
-                    <Label>Image Size</Label>
+                    <Label>Image Scale</Label>
                     <span className="text-sm text-muted-foreground">{config.imageSize ?? 32}</span>
                   </div>
                   <Slider
@@ -621,7 +626,9 @@ function Editor() {
             placeholder="Crosshair name"
             value={exportName}
             onChange={(e) => setExportName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleExport() }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleExport()
+            }}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
