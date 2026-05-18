@@ -118,15 +118,23 @@ export function Crosshair({
       <svg
         width={size}
         height={size}
+        viewBox={`0 0 ${size} ${size}`}
         style={
           mode === "embed"
             ? {
                 position: "absolute",
                 left: "50%",
                 top: "50%",
+                maxWidth: "100%",
+                maxHeight: "100%",
                 transform: `translate(-50%, -50%) translate(${config.offsetX ?? 0}px, ${config.offsetY ?? 0}px) rotate(${config.rotation ?? 0}deg)`
               }
-            : { position: "absolute", left: "50%", top: "50%", transform: `translate(-50%, -50%) rotate(${config.rotation ?? 0}deg)` }
+            : {
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: `translate(-50%, -50%) rotate(${config.rotation ?? 0}deg)`
+              }
         }
       >
         {config.style === "classic" && (
