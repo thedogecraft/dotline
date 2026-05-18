@@ -363,6 +363,20 @@ function Editor() {
                   step={1}
                 />
               </div>
+              <div className="gap-3 flex flex-col">
+                <div className="flex justify-between">
+                  <Label>Rotation</Label>
+                  <span className="text-sm text-muted-foreground">{config.rotation ?? 0}°</span>
+                </div>
+                <Slider
+                  value={[config.rotation ?? 0]}
+                  onValueChange={(val) => handleChange("rotation", val[0])}
+                  min={0}
+                  max={360}
+                  step={1}
+                />
+              </div>
+
               <div className="flex items-center justify-between">
                 <Label>Outline</Label>
                 <Switch
