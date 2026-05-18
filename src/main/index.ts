@@ -12,7 +12,9 @@ import { CrosshairConfig, CrosshairStyle, defaultConfig } from "@/types/crosshai
 let settingsWindow: BrowserWindow | null = null
 let overlayWindow: BrowserWindow | null = null
 let currentOverlayDisplayId: number | null = null
-let currentHotkey = "CommandOrControl+Shift+X"
+const HOTKEY_DEFAULT = "CommandOrControl+Shift+X"
+let currentHotkey = HOTKEY_DEFAULT
+const hotkeyFilePath = join(app.getPath("userData"), "hotkey.json")
 
 function createSettingsWindow(): void {
   settingsWindow = new BrowserWindow({
@@ -137,13 +139,25 @@ app.whenReady().then(() => {
   createSettingsWindow()
   createOverlayWindow()
 
-  // Register global shortcut to toggle crosshair
-  globalShortcut.register(currentHotkey, () => {
-    console.log("Hotkey Pressed")
-    if (settingsWindow && !settingsWindow.isDestroyed()) {
-      settingsWindow.webContents.send("toggle-crosshair")
-    }
-  })
+  // Load hotkey from file and register global shortcut
+  fs.readFile(hotkeyFilePath, "utf-8")
+    .then((data) => {
+      try {
+        const parsed = JSON.parse(data)
+        if (typeof parsed.hotkey === "string" && parsed.hotkey.length > 0) {
+          currentHotkey = parsed.hotkey
+        }
+      } catch {}
+    })
+    .catch(() => {})
+    .finally(() => {
+      globalShortcut.register(currentHotkey, () => {
+        console.log("Hotkey Pressed")
+        if (settingsWindow && !settingsWindow.isDestroyed()) {
+          settingsWindow.webContents.send("toggle-crosshair")
+        }
+      })
+    })
 
   // Initialize auto updater and perform a background check
   initAutoUpdater(() => settingsWindow)
@@ -241,7 +255,11 @@ ipcMain.handle("overlay:update-config", (_event, config: CrosshairConfig) => {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.webContents.send("overlay:config", config)
   }
-  const newHotkey = config.hotkey || "CommandOrControl+Shift+X"
+  return true
+})
+
+ipcMain.handle("hotkey:save", async (_event, hotkey: string) => {
+  const newHotkey = hotkey || HOTKEY_DEFAULT
   if (newHotkey !== currentHotkey) {
     globalShortcut.unregister(currentHotkey)
     globalShortcut.register(newHotkey, () => {
@@ -252,7 +270,19 @@ ipcMain.handle("overlay:update-config", (_event, config: CrosshairConfig) => {
     })
     currentHotkey = newHotkey
   }
+  await fs.writeFile(hotkeyFilePath, JSON.stringify({ hotkey: newHotkey }), "utf-8")
   return true
+})
+
+ipcMain.handle("hotkey:load", async () => {
+  try {
+    const data = await fs.readFile(hotkeyFilePath, "utf-8")
+    const parsed = JSON.parse(data)
+    if (typeof parsed.hotkey === "string" && parsed.hotkey.length > 0) {
+      return parsed.hotkey
+    }
+  } catch {}
+  return HOTKEY_DEFAULT
 })
 
 ipcMain.handle("overlay:list-displays", () => {

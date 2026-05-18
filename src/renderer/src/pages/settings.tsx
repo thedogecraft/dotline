@@ -4,13 +4,16 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { useCrosshairConfig } from "@/hooks/crosshair-config"
 import { HotkeyRecorder } from "@/components/ui/hotkey-recorder"
 
 function Settings() {
-  const { config, setConfig } = useCrosshairConfig()
   const [rpcEnabled, setRpcEnabled] = useState<boolean>(true)
   const [checking, setChecking] = useState(false)
+  const [hotkey, setHotkey] = useState("CommandOrControl+Shift+X")
+
+  useEffect(() => {
+    window.electron.ipcRenderer.invoke("hotkey:load").then(setHotkey).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const disabled = localStorage.getItem("discordRpcDisabled")
@@ -70,8 +73,11 @@ function Settings() {
           <div className="flex items-center justify-between">
             <Label className="w-full">Toggle crosshair overlay</Label>
             <HotkeyRecorder
-              value={config.hotkey || "CommandOrControl+Shift+X"}
-              onChange={(newHotkey) => setConfig({ ...config, hotkey: newHotkey })}
+              value={hotkey}
+              onChange={(newHotkey) => {
+                setHotkey(newHotkey)
+                window.electron.ipcRenderer.invoke("hotkey:save", newHotkey).catch(() => {})
+              }}
             />
           </div>
         </CardContent>
