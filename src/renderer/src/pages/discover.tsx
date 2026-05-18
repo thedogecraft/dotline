@@ -89,7 +89,10 @@ function Discover() {
   }
   const exportItem = async (item: CrosshairLibraryItem) => {
     try {
-      await window.electron.ipcRenderer.invoke("config:export", { name: item.name, config: item.config })
+      await window.electron.ipcRenderer.invoke("config:export", {
+        name: item.name,
+        config: item.config
+      })
       toast.success(`Exported "${item.name}"`)
     } catch {
       toast.error("Failed to export preset")
@@ -253,7 +256,7 @@ function Discover() {
                       <Button size="sm" onClick={() => applyConfig(item.config)}>
                         Apply
                       </Button>
-                      <TooltipButton label="Edit this crosshair">
+                      <TooltipButton label="Open this crosshair in the editor">
                         <Button size="sm" variant="secondary" onClick={() => editItem(item)}>
                           <Pencil className="w-4 h-4" />
                         </Button>
