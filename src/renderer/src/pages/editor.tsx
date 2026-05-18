@@ -337,7 +337,7 @@ function Editor() {
                     value={[config.imageSize ?? 32]}
                     onValueChange={(val) => handleChange("imageSize", val[0])}
                     min={8}
-                    max={128}
+                    max={512}
                     step={1}
                   />
                 </div>
