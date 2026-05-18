@@ -78,11 +78,10 @@ function Discover() {
   }
 
   const importPresetFile = async () => {
-    const imported = (await window.electron.ipcRenderer.invoke(
-      "config:import"
-    )) as CrosshairConfig | null
-    if (imported) {
-      addPresetToLibrary({ ...defaultConfig, ...imported }, "Imported")
+    const result: any = await window.electron.ipcRenderer.invoke("config:import")
+    if (result) {
+      const cfg: CrosshairConfig = result.config ?? result
+      addPresetToLibrary(cfg, result.name || "Imported")
       toast.success("Preset imported successfully")
     } else {
       toast.error("Failed to import preset")
@@ -90,7 +89,7 @@ function Discover() {
   }
   const exportItem = async (item: CrosshairLibraryItem) => {
     try {
-      await window.electron.ipcRenderer.invoke("config:export", item.config)
+      await window.electron.ipcRenderer.invoke("config:export", { name: item.name, config: item.config })
       toast.success(`Exported "${item.name}"`)
     } catch {
       toast.error("Failed to export preset")

@@ -20,6 +20,14 @@ import { ColorPicker } from "@/components/ui/color-picker"
 import { useLocation } from "react-router"
 import { toast } from "sonner"
 import { useCrosshairConfig } from "@/hooks/crosshair-config"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog"
 
 function Editor() {
   const location = useLocation()
@@ -31,6 +39,8 @@ function Editor() {
   const editingExisting = !!editingItemId
   const { config, setConfig } = useCrosshairConfig()
   const [saveName, setSaveName] = useState<string>("")
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [exportName, setExportName] = useState("")
 
   useEffect(() => {
     if (navInitial) {
@@ -55,9 +65,10 @@ function Editor() {
       const library = loadLibrary()
       const idx = library.findIndex((i) => i.id === editingItemId)
       if (idx !== -1) {
-        library[idx] = { ...library[idx], config }
+        const updatedName = saveName.trim() || editingItemName || library[idx].name
+        library[idx] = { ...library[idx], name: updatedName, config }
         saveLibrary(library)
-        toast.success(`Saved to "${editingItemName || library[idx].name}"`)
+        toast.success(`Saved to "${updatedName}"`)
         return
       }
     }
@@ -75,20 +86,30 @@ function Editor() {
   }
 
   const handleExport = async (): Promise<void> => {
+    const name = exportName.trim() || editingItemName || "Crosshair"
     try {
-      await window.electron.ipcRenderer.invoke("config:export", config)
+      await window.electron.ipcRenderer.invoke("config:export", { name, config })
       toast.success("Exported current config")
+      setExportDialogOpen(false)
     } catch {
       toast.error("Failed to export config")
     }
   }
 
+  const handleExportClick = () => {
+    setExportName(editingItemName || saveName || "")
+    setExportDialogOpen(true)
+  }
+
   const handleImport = async (): Promise<void> => {
     const imported = await window.electron.ipcRenderer.invoke("config:import")
     if (imported) {
-      setConfig(imported as CrosshairConfig)
-      localStorage.setItem("currentConfig", JSON.stringify(imported))
-      await window.electron.ipcRenderer.invoke("overlay:update-config", imported as CrosshairConfig)
+      const cfg = (imported as any).config ?? imported
+      const name = (imported as any).name
+      setConfig(cfg)
+      localStorage.setItem("currentConfig", JSON.stringify(cfg))
+      await window.electron.ipcRenderer.invoke("overlay:update-config", cfg)
+      if (name) setSaveName(name)
       toast.success("Imported config successfully")
     } else {
       toast.error("Import cancelled or failed")
@@ -183,7 +204,7 @@ function Editor() {
             <Button onClick={handleImport} variant="outline" size="sm">
               Import
             </Button>
-            <Button onClick={handleExport} variant="outline" size="sm">
+            <Button onClick={handleExportClick} variant="outline" size="sm">
               Export
             </Button>
             <Button onClick={save} size="sm">
@@ -573,6 +594,27 @@ function Editor() {
           </Card>
         </div>
       </div>
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Export Crosshair</DialogTitle>
+            <DialogDescription>Give your crosshair a name before exporting.</DialogDescription>
+          </DialogHeader>
+          <Input
+            autoFocus
+            placeholder="Crosshair name"
+            value={exportName}
+            onChange={(e) => setExportName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleExport() }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleExport}>Export</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

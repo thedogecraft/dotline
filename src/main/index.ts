@@ -296,17 +296,18 @@ ipcMain.handle("overlay:get-display", () => {
   return target ? target.id : null
 })
 
-ipcMain.handle("config:export", async (_event, config: CrosshairConfig) => {
+ipcMain.handle("config:export", async (_event, data: { name: string; config: CrosshairConfig }) => {
+  const defaultName = data.name?.trim() ? `${data.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.json` : "crosshair.json"
   const options: SaveDialogOptions = {
     title: "Export Crosshair Config",
     filters: [{ name: "JSON Files", extensions: ["json"] }],
-    defaultPath: "crosshair.json"
+    defaultPath: defaultName
   }
   const result = settingsWindow
     ? await dialog.showSaveDialog(settingsWindow, options)
     : await dialog.showSaveDialog(options)
   if (result.canceled || !result.filePath) return false
-  await fs.writeFile(result.filePath, JSON.stringify(config, null, 2), "utf-8")
+  await fs.writeFile(result.filePath, JSON.stringify({ name: data.name ?? "", config: data.config }, null, 2), "utf-8")
   return true
 })
 
@@ -331,10 +332,15 @@ ipcMain.handle("config:import", async () => {
 
     const allowedStyles: CrosshairStyle[] = ["classic", "dot", "circle", "x", "image"]
 
+    // Support both wrapped { name, config } and plain config formats
+    const isWrapped = "config" in parsed && parsed.config && typeof parsed.config === "object"
+    const source = isWrapped ? parsed.config : parsed
+    const importedName = isWrapped ? parsed.name : undefined
+
     const cfg: CrosshairConfig = {
       ...defaultConfig,
-      ...parsed,
-      style: allowedStyles.includes(parsed.style) ? parsed.style : defaultConfig.style
+      ...source,
+      style: allowedStyles.includes(source.style) ? source.style : defaultConfig.style
     }
 
     if (
@@ -345,7 +351,7 @@ ipcMain.handle("config:import", async () => {
       return null
     }
 
-    return cfg
+    return { config: cfg, name: importedName }
   } catch {
     return null
   }
