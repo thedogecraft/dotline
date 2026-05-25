@@ -1,29 +1,23 @@
 name: Build Dotline (Win + Linux)
-
 on:
   push:
     tags:
       - "v*"
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - run: npm install -g pnpm
+      - run: pnpm install --ignore-scripts
+      - run: pnpm approve-builds --all
       - run: pnpm install
-        continue-on-error: true
-
-      # Build & Publish for electron-updater
       - run: pnpm run build
       - run: pnpm run dist -- --publish always
         env:
