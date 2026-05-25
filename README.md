@@ -19,7 +19,7 @@
 
 ### Tested Games
 
-#### All games were tested on Windows 11 24H2
+#### All games were tested on Windows 11 25H2
 
 - CS2 ✅
 - Rust ✅ (use Windowed fullscreen mode)
@@ -29,10 +29,10 @@
 
 ### Supported OSes
 
-- Windows: ✅ (Tested on Windows 11 24H2)
+- Windows: ✅ (Tested on Windows 11 25H2, 24H2)
 - Linux: ✅ (Tested on the following distributions)
-    - Arch Linux on KDE
-    - CachyOs on KDE
+  - Arch Linux on KDE
+  - CachyOS on KDE
 - MacOS ⚠️ (Seems to work. must build yourself, tested on MacOS sequoia)
 
 > [!WARNING]  
@@ -49,6 +49,8 @@
 ### 🎯 Adding Preset Crosshairs
 
 Preset crosshairs are located in `src/renderer/src/lib/presets.ts`.
+> [!NOTE]
+> This is only to add default presets. to create your own for personal reasons dotline has an in app editor.
 
 To add your own:
 
