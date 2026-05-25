@@ -8,6 +8,8 @@ on:
       tag:
         description: 'Tag to build and publish (e.g. v1.2.3)'
         required: true
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ${{ matrix.os }}
