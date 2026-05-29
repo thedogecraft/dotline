@@ -327,7 +327,9 @@ ipcMain.handle("overlay:get-display", () => {
 })
 
 ipcMain.handle("config:export", async (_event, data: { name: string; config: CrosshairConfig }) => {
-  const defaultName = data.name?.trim() ? `${data.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.json` : "crosshair.json"
+  const defaultName = data.name?.trim()
+    ? `${data.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.json`
+    : "crosshair.json"
   const options: SaveDialogOptions = {
     title: "Export Crosshair Config",
     filters: [{ name: "JSON Files", extensions: ["json"] }],
@@ -337,7 +339,11 @@ ipcMain.handle("config:export", async (_event, data: { name: string; config: Cro
     ? await dialog.showSaveDialog(settingsWindow, options)
     : await dialog.showSaveDialog(options)
   if (result.canceled || !result.filePath) return false
-  await fs.writeFile(result.filePath, JSON.stringify({ name: data.name ?? "", config: data.config }, null, 2), "utf-8")
+  await fs.writeFile(
+    result.filePath,
+    JSON.stringify({ name: data.name ?? "", config: data.config }, null, 2),
+    "utf-8"
+  )
   return true
 })
 
