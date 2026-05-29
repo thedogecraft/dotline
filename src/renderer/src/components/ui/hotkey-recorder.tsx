@@ -22,11 +22,19 @@ export function HotkeyRecorder({
   }
 
   const excludedKeys = new Set([
-    "Control", "Shift", "Alt", "Meta", "Escape",
-    "ControlLeft", "ControlRight",
-    "ShiftLeft", "ShiftRight",
-    "AltLeft", "AltRight",
-    "MetaLeft", "MetaRight",
+    "Control",
+    "Shift",
+    "Alt",
+    "Meta",
+    "Escape",
+    "ControlLeft",
+    "ControlRight",
+    "ShiftLeft",
+    "ShiftRight",
+    "AltLeft",
+    "AltRight",
+    "MetaLeft",
+    "MetaRight"
   ])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

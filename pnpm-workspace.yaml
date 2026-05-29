@@ -1,0 +1,7 @@
+allowBuilds:
+  core-js: true
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  protobufjs: true
+  register-scheme: true
