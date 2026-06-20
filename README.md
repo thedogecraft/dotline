@@ -49,6 +49,7 @@
 ### 🎯 Adding Preset Crosshairs
 
 Preset crosshairs are located in `src/renderer/src/lib/presets.ts`.
+
 > [!NOTE]
 > This is only to add default presets. to create your own for personal reasons dotline has an in app editor.
 

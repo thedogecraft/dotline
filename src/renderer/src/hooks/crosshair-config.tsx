@@ -36,7 +36,7 @@ export function CrosshairConfigProvider({ children }: { children: React.ReactNod
       ...newConfig,
       offsetX: newConfig.offsetX ?? prev.offsetX,
       offsetY: newConfig.offsetY ?? prev.offsetY,
-      overlayDisplayId: newConfig.overlayDisplayId ?? prev.overlayDisplayId,
+      overlayDisplayId: newConfig.overlayDisplayId ?? prev.overlayDisplayId
     }
     setConfigState(merged)
     localStorage.setItem("currentConfig", JSON.stringify(merged))

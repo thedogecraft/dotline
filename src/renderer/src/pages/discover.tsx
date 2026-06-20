@@ -86,7 +86,9 @@ function Discover() {
       const savedRaw = localStorage.getItem("currentConfig")
       let prevConfig = defaultConfig
       if (savedRaw) {
-        try { prevConfig = { ...defaultConfig, ...JSON.parse(savedRaw) } } catch {}
+        try {
+          prevConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
+        } catch {}
       }
       setOffsetDialog({ config: cfg, prevConfig })
       return
@@ -102,7 +104,7 @@ function Discover() {
       ...cfg,
       offsetX: currentConfig.offsetX,
       offsetY: currentConfig.offsetY,
-      overlayDisplayId: currentConfig.overlayDisplayId,
+      overlayDisplayId: currentConfig.overlayDisplayId
     }
     doApply(merged)
     toast.success("Crosshair applied")
@@ -113,7 +115,9 @@ function Discover() {
     const { config: cfg } = offsetDialog
     setOffsetDialog(null)
     await doApply(cfg)
-    toast.success(`Crosshair applied with its offset (X: ${cfg.offsetX ?? 0}, Y: ${cfg.offsetY ?? 0})`)
+    toast.success(
+      `Crosshair applied with its offset (X: ${cfg.offsetX ?? 0}, Y: ${cfg.offsetY ?? 0})`
+    )
   }
 
   const keepCurrentOffset = async () => {
@@ -124,7 +128,7 @@ function Discover() {
       ...cfg,
       offsetX: prevConfig.offsetX,
       offsetY: prevConfig.offsetY,
-      overlayDisplayId: prevConfig.overlayDisplayId,
+      overlayDisplayId: prevConfig.overlayDisplayId
     }
     await doApply(merged)
     toast.success("Crosshair applied — your offset kept")
@@ -397,7 +401,9 @@ function Discover() {
 
       <AlertDialog
         open={offsetDialog !== null}
-        onOpenChange={(open) => { if (!open) setOffsetDialog(null) }}
+        onOpenChange={(open) => {
+          if (!open) setOffsetDialog(null)
+        }}
       >
         <AlertDialogContent forceMount>
           <AlertDialogHeader>
@@ -416,9 +422,7 @@ function Discover() {
             <Button variant="outline" onClick={keepCurrentOffset}>
               Keep my offset
             </Button>
-            <Button onClick={applyWithCrosshairOffset}>
-              Use crosshair offset
-            </Button>
+            <Button onClick={applyWithCrosshairOffset}>Use crosshair offset</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -47,7 +47,9 @@ function Editor() {
       const savedRaw = localStorage.getItem("currentConfig")
       let currentConfig = defaultConfig
       if (savedRaw) {
-        try { currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) } } catch {}
+        try {
+          currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
+        } catch {}
       }
       const newOffsetX = navInitial.offsetX ?? currentConfig.offsetX
       const newOffsetY = navInitial.offsetY ?? currentConfig.offsetY
@@ -131,7 +133,9 @@ function Editor() {
       const savedRaw = localStorage.getItem("currentConfig")
       let currentConfig = defaultConfig
       if (savedRaw) {
-        try { currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) } } catch {}
+        try {
+          currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
+        } catch {}
       }
       const newOffsetX = cfg.offsetX ?? currentConfig.offsetX
       const newOffsetY = cfg.offsetY ?? currentConfig.offsetY
@@ -143,7 +147,9 @@ function Editor() {
       if (name) setSaveName(name)
 
       if (offsetChanged) {
-        toast.success(`Crosshair imported — offset changed to X: ${newOffsetX ?? 0}, Y: ${newOffsetY ?? 0}`)
+        toast.success(
+          `Crosshair imported — offset changed to X: ${newOffsetX ?? 0}, Y: ${newOffsetY ?? 0}`
+        )
       } else {
         toast.success("Imported config successfully")
       }
