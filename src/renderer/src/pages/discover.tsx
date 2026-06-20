@@ -71,9 +71,22 @@ function Discover() {
   }
 
   const applyConfig = async (cfg: CrosshairConfig) => {
-    localStorage.setItem("currentConfig", JSON.stringify(cfg))
-    setCurrent(cfg)
-    await window.electron.ipcRenderer.invoke("overlay:update-config", cfg)
+    const savedRaw = localStorage.getItem("currentConfig")
+    let currentConfig = defaultConfig
+    if (savedRaw) {
+      try {
+        currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
+      } catch {}
+    }
+    const merged = {
+      ...cfg,
+      offsetX: cfg.offsetX ?? currentConfig.offsetX,
+      offsetY: cfg.offsetY ?? currentConfig.offsetY,
+      overlayDisplayId: cfg.overlayDisplayId ?? currentConfig.overlayDisplayId,
+    }
+    localStorage.setItem("currentConfig", JSON.stringify(merged))
+    setCurrent(merged)
+    await window.electron.ipcRenderer.invoke("overlay:update-config", merged)
     toast.success("Crosshair applied")
   }
 
