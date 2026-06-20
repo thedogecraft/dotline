@@ -45,6 +45,10 @@ function Discover() {
   const [query, setQuery] = useState("")
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<null | { id: string; name: string }>(null)
+  const [offsetDialog, setOffsetDialog] = useState<{
+    config: CrosshairConfig
+    prevConfig: CrosshairConfig
+  } | null>(null)
 
   useEffect(() => {
     setLibrary(loadLibrary())
@@ -70,7 +74,23 @@ function Discover() {
     toast.success(`Preset "${item.name}" added to library`)
   }
 
-  const applyConfig = async (cfg: CrosshairConfig) => {
+  const doApply = async (cfg: CrosshairConfig) => {
+    localStorage.setItem("currentConfig", JSON.stringify(cfg))
+    setCurrent(cfg)
+    await window.electron.ipcRenderer.invoke("overlay:update-config", cfg)
+  }
+
+  const applyConfig = (cfg: CrosshairConfig) => {
+    const hasCustomOffset = cfg.offsetX !== undefined || cfg.offsetY !== undefined
+    if (hasCustomOffset) {
+      const savedRaw = localStorage.getItem("currentConfig")
+      let prevConfig = defaultConfig
+      if (savedRaw) {
+        try { prevConfig = { ...defaultConfig, ...JSON.parse(savedRaw) } } catch {}
+      }
+      setOffsetDialog({ config: cfg, prevConfig })
+      return
+    }
     const savedRaw = localStorage.getItem("currentConfig")
     let currentConfig = defaultConfig
     if (savedRaw) {
@@ -80,14 +100,34 @@ function Discover() {
     }
     const merged = {
       ...cfg,
-      offsetX: cfg.offsetX ?? currentConfig.offsetX,
-      offsetY: cfg.offsetY ?? currentConfig.offsetY,
-      overlayDisplayId: cfg.overlayDisplayId ?? currentConfig.overlayDisplayId,
+      offsetX: currentConfig.offsetX,
+      offsetY: currentConfig.offsetY,
+      overlayDisplayId: currentConfig.overlayDisplayId,
     }
-    localStorage.setItem("currentConfig", JSON.stringify(merged))
-    setCurrent(merged)
-    await window.electron.ipcRenderer.invoke("overlay:update-config", merged)
+    doApply(merged)
     toast.success("Crosshair applied")
+  }
+
+  const applyWithCrosshairOffset = async () => {
+    if (!offsetDialog) return
+    const { config: cfg } = offsetDialog
+    setOffsetDialog(null)
+    await doApply(cfg)
+    toast.success(`Crosshair applied with its offset (X: ${cfg.offsetX ?? 0}, Y: ${cfg.offsetY ?? 0})`)
+  }
+
+  const keepCurrentOffset = async () => {
+    if (!offsetDialog) return
+    const { config: cfg, prevConfig } = offsetDialog
+    setOffsetDialog(null)
+    const merged = {
+      ...cfg,
+      offsetX: prevConfig.offsetX,
+      offsetY: prevConfig.offsetY,
+      overlayDisplayId: prevConfig.overlayDisplayId,
+    }
+    await doApply(merged)
+    toast.success("Crosshair applied — your offset kept")
   }
 
   const importPresetFile = async () => {
@@ -350,6 +390,34 @@ function Discover() {
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
               Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={offsetDialog !== null}
+        onOpenChange={(open) => { if (!open) setOffsetDialog(null) }}
+      >
+        <AlertDialogContent forceMount>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Custom Crosshair Offset</AlertDialogTitle>
+            <AlertDialogDescription>
+              {offsetDialog && (
+                <>
+                  This crosshair has a custom offset (X: {offsetDialog.config.offsetX ?? 0}, Y:{" "}
+                  {offsetDialog.config.offsetY ?? 0}). Would you like to use this crosshair's offset
+                  or keep your current positioning?
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={keepCurrentOffset}>
+              Keep my offset
+            </Button>
+            <Button onClick={applyWithCrosshairOffset}>
+              Use crosshair offset
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

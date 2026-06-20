@@ -44,7 +44,22 @@ function Editor() {
 
   useEffect(() => {
     if (navInitial) {
+      const savedRaw = localStorage.getItem("currentConfig")
+      let currentConfig = defaultConfig
+      if (savedRaw) {
+        try { currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) } } catch {}
+      }
+      const newOffsetX = navInitial.offsetX ?? currentConfig.offsetX
+      const newOffsetY = navInitial.offsetY ?? currentConfig.offsetY
+      const offsetChanged =
+        (newOffsetX ?? 0) !== (currentConfig.offsetX ?? 0) ||
+        (newOffsetY ?? 0) !== (currentConfig.offsetY ?? 0)
+
       setConfig(navInitial)
+
+      if (offsetChanged) {
+        toast.success(`Crosshair changed offset — X: ${newOffsetX ?? 0}, Y: ${newOffsetY ?? 0}`)
+      }
     }
   }, [navInitial, setConfig])
 
@@ -112,11 +127,26 @@ function Editor() {
     if (imported) {
       const cfg = (imported as any).config ?? imported
       const name = (imported as any).name
+
+      const savedRaw = localStorage.getItem("currentConfig")
+      let currentConfig = defaultConfig
+      if (savedRaw) {
+        try { currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) } } catch {}
+      }
+      const newOffsetX = cfg.offsetX ?? currentConfig.offsetX
+      const newOffsetY = cfg.offsetY ?? currentConfig.offsetY
+      const offsetChanged =
+        (newOffsetX ?? 0) !== (currentConfig.offsetX ?? 0) ||
+        (newOffsetY ?? 0) !== (currentConfig.offsetY ?? 0)
+
       setConfig(cfg)
-      localStorage.setItem("currentConfig", JSON.stringify(cfg))
-      await window.electron.ipcRenderer.invoke("overlay:update-config", cfg)
       if (name) setSaveName(name)
-      toast.success("Imported config successfully")
+
+      if (offsetChanged) {
+        toast.success(`Crosshair imported — offset changed to X: ${newOffsetX ?? 0}, Y: ${newOffsetY ?? 0}`)
+      } else {
+        toast.success("Imported config successfully")
+      }
     } else {
       toast.error("Import cancelled or failed")
     }
