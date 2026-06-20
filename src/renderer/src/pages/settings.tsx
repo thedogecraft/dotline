@@ -10,6 +10,7 @@ function Settings() {
   const [rpcEnabled, setRpcEnabled] = useState<boolean>(true)
   const [checking, setChecking] = useState(false)
   const [hotkey, setHotkey] = useState("CommandOrControl+Shift+X")
+  const [gsyncCompat, setGsyncCompat] = useState<boolean>(false)
 
   useEffect(() => {
     window.electron.ipcRenderer
@@ -22,6 +23,19 @@ function Settings() {
     const disabled = localStorage.getItem("discordRpcDisabled")
     setRpcEnabled(!(disabled === "true"))
   }, [])
+
+  useEffect(() => {
+    window.electron.ipcRenderer
+      .invoke("settings:get-gsync-compat")
+      .then(setGsyncCompat)
+      .catch(() => {})
+  }, [])
+
+  const handleToggleGsync = async (checked: boolean) => {
+    setGsyncCompat(checked)
+    await window.electron.ipcRenderer.invoke("settings:set-gsync-compat", checked)
+    toast.success("Restart required for this change to take effect.")
+  }
 
   const handleToggleRpc = async (checked: boolean) => {
     setRpcEnabled(checked)
@@ -82,6 +96,23 @@ function Settings() {
                 window.electron.ipcRenderer.invoke("hotkey:save", newHotkey).catch(() => {})
               }}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Compatibility</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Label>G-Sync Compatibility Mode</Label>
+              <p className="text-sm text-muted-foreground">
+                Disables GPU acceleration to prevent G-Sync conflicts with games. Requires restart.
+              </p>
+            </div>
+            <Switch checked={gsyncCompat} onCheckedChange={(v) => handleToggleGsync(!!v)} />
           </div>
         </CardContent>
       </Card>

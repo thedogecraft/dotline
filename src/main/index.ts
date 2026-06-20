@@ -5,7 +5,7 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils"
 import dotlinePng from "../../resources/dotline.png?asset"
 import { createAppTray, notifyMinimizedToTrayOnce } from "./tray"
 import "./rpc"
-import { promises as fs } from "fs"
+import { promises as fs, existsSync, readFileSync } from "fs"
 import { initAutoUpdater, triggerAutoUpdateCheck } from "./updater"
 import { CrosshairConfig, CrosshairStyle, defaultConfig } from "@/types/crosshair"
 
@@ -15,6 +15,21 @@ let currentOverlayDisplayId: number | null = null
 const HOTKEY_DEFAULT = "CommandOrControl+Shift+X"
 let currentHotkey = HOTKEY_DEFAULT
 const hotkeyFilePath = join(app.getPath("userData"), "hotkey.json")
+const settingsFilePath = join(app.getPath("userData"), "settings.json")
+
+function readSettingsSync(): { gsyncCompat?: boolean } {
+  try {
+    if (existsSync(settingsFilePath)) {
+      return JSON.parse(readFileSync(settingsFilePath, "utf-8"))
+    }
+  } catch {}
+  return {}
+}
+
+const savedSettings = readSettingsSync()
+if (savedSettings.gsyncCompat) {
+  app.disableHardwareAcceleration()
+}
 
 function createSettingsWindow(): void {
   settingsWindow = new BrowserWindow({
@@ -283,6 +298,16 @@ ipcMain.handle("hotkey:load", async () => {
     }
   } catch {}
   return HOTKEY_DEFAULT
+})
+
+ipcMain.handle("settings:get-gsync-compat", () => {
+  return savedSettings.gsyncCompat === true
+})
+
+ipcMain.handle("settings:set-gsync-compat", async (_event, value: boolean) => {
+  savedSettings.gsyncCompat = value
+  await fs.writeFile(settingsFilePath, JSON.stringify(savedSettings), "utf-8")
+  return true
 })
 
 ipcMain.handle("overlay:list-displays", () => {
