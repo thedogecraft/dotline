@@ -12,7 +12,10 @@ function Settings() {
   const [hotkey, setHotkey] = useState("CommandOrControl+Shift+X")
 
   useEffect(() => {
-    window.electron.ipcRenderer.invoke("hotkey:load").then(setHotkey).catch(() => {})
+    window.electron.ipcRenderer
+      .invoke("hotkey:load")
+      .then(setHotkey)
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
