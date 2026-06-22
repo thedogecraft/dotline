@@ -11,6 +11,7 @@ function Settings() {
   const [checking, setChecking] = useState(false)
   const [hotkey, setHotkey] = useState("CommandOrControl+Shift+X")
   const [gsyncCompat, setGsyncCompat] = useState<boolean>(false)
+  const [crash, setCrash] = useState(false)
 
   useEffect(() => {
     window.electron.ipcRenderer
@@ -65,6 +66,8 @@ function Settings() {
       setChecking(false)
     }
   }
+
+  if (crash) throw new Error("This is a test crash — the error boundary works!")
 
   return (
     <div className=" mx-auto space-y-4">
@@ -162,19 +165,24 @@ function Settings() {
         </CardContent>
       </Card>
 
-      {/* <Card>
+      <Card>
         <CardHeader>
-          <CardTitle>Logs</CardTitle>
+          <CardTitle>Crash Test</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Open the application logs folder.</p>
+            <p className="text-sm text-muted-foreground">
+              Trigger a test error to verify the error boundary is working.
+            </p>
           </div>
-          <Button variant="outline" onClick={openLogs}>
-            Open Logs Folder
+          <Button
+            variant="destructive"
+            onClick={() => setCrash(true)}
+          >
+            Crash the app
           </Button>
         </CardContent>
-      </Card> */}
+      </Card>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { CrosshairConfig } from "@/types/crosshair"
 import { defaultConfig } from "@/types/crosshair"
 import Editor from "@/pages/editor"
 import Discover from "@/pages/discover"
+import ErrorBoundary from "@/components/ErrorBoundary"
 import Titlebar from "./components/titlebar"
 import Sidebar from "./components/sidebar"
 import Positioning from "./pages/positioning"
@@ -256,7 +257,9 @@ function App() {
   ) : (
     <OverlayProvider>
       <CrosshairConfigProvider>
-        <RoutedApp />
+        <ErrorBoundary>
+          <RoutedApp />
+        </ErrorBoundary>
       </CrosshairConfigProvider>
     </OverlayProvider>
   )
