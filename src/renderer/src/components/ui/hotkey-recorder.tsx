@@ -10,33 +10,6 @@ export function HotkeyRecorder({
 }) {
   const [isRecording, setIsRecording] = useState(false)
 
-  function normalizeKey(code: string): string {
-    if (code.startsWith("Key")) return code.slice(3)
-    if (code.startsWith("Digit")) return code.slice(5)
-    if (code.startsWith("Numpad")) return code.replace("Numpad", "Num")
-    if (code === "ArrowUp") return "Up"
-    if (code === "ArrowDown") return "Down"
-    if (code === "ArrowLeft") return "Left"
-    if (code === "ArrowRight") return "Right"
-    return code
-  }
-
-  const excludedKeys = new Set([
-    "Control",
-    "Shift",
-    "Alt",
-    "Meta",
-    "Escape",
-    "ControlLeft",
-    "ControlRight",
-    "ShiftLeft",
-    "ShiftRight",
-    "AltLeft",
-    "AltRight",
-    "MetaLeft",
-    "MetaRight"
-  ])
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.preventDefault()
     const modifiers: string[] = []
@@ -44,8 +17,11 @@ export function HotkeyRecorder({
     if (e.shiftKey) modifiers.push("Shift")
     if (e.altKey) modifiers.push("Alt")
     if (e.metaKey) modifiers.push("Command")
-    const key = normalizeKey(e.code)
-    if (key && !excludedKeys.has(key)) {
+    let key = e.code
+    if (key && !["Control", "Shift", "Alt", "Meta", "Escape"].includes(key)) {
+      if (key.startsWith("Numpad")) {
+        key = key.replace("Numpad", "Num")
+      }
       const parts = [...modifiers, key]
       const hotkey = parts.join("+")
       onChange(hotkey)

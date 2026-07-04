@@ -114,7 +114,6 @@ function Sidebar() {
             "hover:bg-accent hover:text-accent-foreground"
           )}
           aria-label={collapsed ? "Discord" : undefined}
-          rel="noreferrer"
         >
           <span className="flex items-center justify-center">
             <Discord className="w-5 h-5 fill-primary" />
@@ -130,7 +129,6 @@ function Sidebar() {
             "hover:bg-accent hover:text-accent-foreground"
           )}
           aria-label={collapsed ? "Discord" : undefined}
-          rel="noreferrer"
         >
           <span className="flex items-center justify-center">
             <Github className="w-5 h-5 fill-secondary-foreground" />

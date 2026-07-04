@@ -69,10 +69,7 @@ export function Crosshair({
   const colorWithOpacity = hexToRgba(config.color, config.opacity)
 
   // calculate center
-  const size =
-    config.style === "image"
-      ? Math.max(config.imageSize ?? 32, 64)
-      : Math.max((config.length + config.gap) * 2 + config.thickness * 2, 64)
+  const size = Math.max((config.length + config.gap) * 2 + config.thickness * 2, 64)
   const center = size / 2
 
   const renderCenterDot = () => {
@@ -118,23 +115,15 @@ export function Crosshair({
       <svg
         width={size}
         height={size}
-        viewBox={`0 0 ${size} ${size}`}
         style={
           mode === "embed"
             ? {
                 position: "absolute",
                 left: "50%",
                 top: "50%",
-                maxWidth: "100%",
-                maxHeight: "100%",
-                transform: `translate(-50%, -50%) translate(${config.offsetX ?? 0}px, ${config.offsetY ?? 0}px) rotate(${config.rotation ?? 0}deg)`
+                transform: `translate(-50%, -50%) translate(${config.offsetX ?? 0}px, ${config.offsetY ?? 0}px)`
               }
-            : {
-                position: "absolute",
-                left: "50%",
-                top: "50%",
-                transform: `translate(-50%, -50%) rotate(${config.rotation ?? 0}deg)`
-              }
+            : { position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" }
         }
       >
         {config.style === "classic" && (
@@ -246,20 +235,15 @@ export function CrosshairPreview({
   size?: number
 }) {
   // Reuse renderer but constrain SVG to preview size by scaling lengths to fit
-  const baseSize =
-    config.style === "image"
-      ? Math.max(config.imageSize ?? 32, 64)
-      : Math.max((config.length + config.gap) * 2 + config.thickness * 2, 64)
-  const scale = Math.min(1, size / baseSize)
+  const scale = Math.min(
+    1,
+    size / Math.max((config.length + config.gap) * 2 + config.thickness * 2, 64)
+  )
   const scaled: CrosshairConfig = {
     ...config,
-    ...(config.style === "image"
-      ? { imageSize: Math.max(1, Math.round((config.imageSize ?? 32) * scale)) }
-      : {
-          length: Math.max(1, Math.round(config.length * scale)),
-          gap: Math.max(0, Math.round(config.gap * scale)),
-          thickness: Math.max(1, Math.round(config.thickness * scale))
-        })
+    length: Math.max(1, Math.round(config.length * scale)),
+    gap: Math.max(0, Math.round(config.gap * scale)),
+    thickness: Math.max(1, Math.round(config.thickness * scale))
   }
   return (
     <div

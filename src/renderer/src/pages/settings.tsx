@@ -4,39 +4,18 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { useCrosshairConfig } from "@/hooks/crosshair-config"
 import { HotkeyRecorder } from "@/components/ui/hotkey-recorder"
 
 function Settings() {
+  const { config, setConfig } = useCrosshairConfig()
   const [rpcEnabled, setRpcEnabled] = useState<boolean>(true)
   const [checking, setChecking] = useState(false)
-  const [hotkey, setHotkey] = useState("CommandOrControl+Shift+X")
-  const [gsyncCompat, setGsyncCompat] = useState<boolean>(false)
-  const [crash, setCrash] = useState(false)
-
-  useEffect(() => {
-    window.electron.ipcRenderer
-      .invoke("hotkey:load")
-      .then(setHotkey)
-      .catch(() => {})
-  }, [])
 
   useEffect(() => {
     const disabled = localStorage.getItem("discordRpcDisabled")
     setRpcEnabled(!(disabled === "true"))
   }, [])
-
-  useEffect(() => {
-    window.electron.ipcRenderer
-      .invoke("settings:get-gsync-compat")
-      .then(setGsyncCompat)
-      .catch(() => {})
-  }, [])
-
-  const handleToggleGsync = async (checked: boolean) => {
-    setGsyncCompat(checked)
-    await window.electron.ipcRenderer.invoke("settings:set-gsync-compat", checked)
-    toast.success("Restart required for this change to take effect.")
-  }
 
   const handleToggleRpc = async (checked: boolean) => {
     setRpcEnabled(checked)
@@ -67,8 +46,6 @@ function Settings() {
     }
   }
 
-  if (crash) throw new Error("This is a test crash — the error boundary works!")
-
   return (
     <div className=" mx-auto space-y-4">
       <h1 className="text-3xl font-bold ">Settings</h1>
@@ -93,29 +70,9 @@ function Settings() {
           <div className="flex items-center justify-between">
             <Label className="w-full">Toggle crosshair overlay</Label>
             <HotkeyRecorder
-              value={hotkey}
-              onChange={(newHotkey) => {
-                setHotkey(newHotkey)
-                window.electron.ipcRenderer.invoke("hotkey:save", newHotkey).catch(() => {})
-              }}
+              value={config.hotkey || "CommandOrControl+Shift+X"}
+              onChange={(newHotkey) => setConfig({ ...config, hotkey: newHotkey })}
             />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Compatibility</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <Label>G-Sync Compatibility Mode</Label>
-              <p className="text-sm text-muted-foreground">
-                Disables GPU acceleration to prevent G-Sync conflicts with games. Requires restart.
-              </p>
-            </div>
-            <Switch checked={gsyncCompat} onCheckedChange={(v) => handleToggleGsync(!!v)} />
           </div>
         </CardContent>
       </Card>
@@ -165,24 +122,19 @@ function Settings() {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardHeader>
-          <CardTitle>Crash Test</CardTitle>
+          <CardTitle>Logs</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">
-              Trigger a test error to verify the error boundary is working.
-            </p>
+            <p className="text-sm text-muted-foreground">Open the application logs folder.</p>
           </div>
-          <Button
-            variant="destructive"
-            onClick={() => setCrash(true)}
-          >
-            Crash the app
+          <Button variant="outline" onClick={openLogs}>
+            Open Logs Folder
           </Button>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   )
 }

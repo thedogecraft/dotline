@@ -5,31 +5,14 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils"
 import dotlinePng from "../../resources/dotline.png?asset"
 import { createAppTray, notifyMinimizedToTrayOnce } from "./tray"
 import "./rpc"
-import { promises as fs, existsSync, readFileSync } from "fs"
+import { promises as fs } from "fs"
 import { initAutoUpdater, triggerAutoUpdateCheck } from "./updater"
 import { CrosshairConfig, CrosshairStyle, defaultConfig } from "@/types/crosshair"
 
 let settingsWindow: BrowserWindow | null = null
 let overlayWindow: BrowserWindow | null = null
 let currentOverlayDisplayId: number | null = null
-const HOTKEY_DEFAULT = "CommandOrControl+Shift+X"
-let currentHotkey = HOTKEY_DEFAULT
-const hotkeyFilePath = join(app.getPath("userData"), "hotkey.json")
-const settingsFilePath = join(app.getPath("userData"), "settings.json")
-
-function readSettingsSync(): { gsyncCompat?: boolean } {
-  try {
-    if (existsSync(settingsFilePath)) {
-      return JSON.parse(readFileSync(settingsFilePath, "utf-8"))
-    }
-  } catch {}
-  return {}
-}
-
-const savedSettings = readSettingsSync()
-if (savedSettings.gsyncCompat) {
-  app.disableHardwareAcceleration()
-}
+let currentHotkey = "CommandOrControl+Shift+X"
 
 function createSettingsWindow(): void {
   settingsWindow = new BrowserWindow({
@@ -154,25 +137,11 @@ app.whenReady().then(() => {
   createSettingsWindow()
   createOverlayWindow()
 
-  // Load hotkey from file and register global shortcut
-  fs.readFile(hotkeyFilePath, "utf-8")
-    .then((data) => {
-      try {
-        const parsed = JSON.parse(data)
-        if (typeof parsed.hotkey === "string" && parsed.hotkey.length > 0) {
-          currentHotkey = parsed.hotkey
-        }
-      } catch {}
-    })
-    .catch(() => {})
-    .finally(() => {
-      globalShortcut.register(currentHotkey, () => {
-        console.log("Hotkey Pressed")
-        if (settingsWindow && !settingsWindow.isDestroyed()) {
-          settingsWindow.webContents.send("toggle-crosshair")
-        }
-      })
-    })
+  // Register global shortcut to toggle crosshair
+  globalShortcut.register(currentHotkey, () => {
+    console.log("Hotkey Pressed")
+    settingsWindow?.webContents.send("toggle-crosshair")
+  })
 
   // Initialize auto updater and perform a background check
   initAutoUpdater(() => settingsWindow)
@@ -250,63 +219,29 @@ ipcMain.on("window-control", (event, action: "minimize" | "maximize" | "close") 
 })
 
 ipcMain.handle("overlay:show", () => {
-  if (overlayWindow && !overlayWindow.isDestroyed()) {
-    overlayWindow.setAlwaysOnTop(true, "screen-saver")
-    overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
-    overlayWindow.setIgnoreMouseEvents(true, { forward: true })
-    overlayWindow.showInactive()
-  }
+  overlayWindow?.setAlwaysOnTop(true, "screen-saver")
+  overlayWindow?.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+  overlayWindow?.setIgnoreMouseEvents(true, { forward: true })
+  overlayWindow?.showInactive()
   return true
 })
 
 ipcMain.handle("overlay:hide", () => {
-  if (overlayWindow && !overlayWindow.isDestroyed()) {
-    overlayWindow.hide()
-  }
+  overlayWindow?.hide()
   return true
 })
 
 ipcMain.handle("overlay:update-config", (_event, config: CrosshairConfig) => {
-  if (overlayWindow && !overlayWindow.isDestroyed()) {
-    overlayWindow.webContents.send("overlay:config", config)
-  }
-  return true
-})
-
-ipcMain.handle("hotkey:save", async (_event, hotkey: string) => {
-  const newHotkey = hotkey || HOTKEY_DEFAULT
+  overlayWindow?.webContents.send("overlay:config", config)
+  const newHotkey = config.hotkey || "CommandOrControl+Shift+X"
   if (newHotkey !== currentHotkey) {
     globalShortcut.unregister(currentHotkey)
     globalShortcut.register(newHotkey, () => {
       console.log("Hotkey Pressed")
-      if (settingsWindow && !settingsWindow.isDestroyed()) {
-        settingsWindow.webContents.send("toggle-crosshair")
-      }
+      settingsWindow?.webContents.send("toggle-crosshair")
     })
     currentHotkey = newHotkey
   }
-  await fs.writeFile(hotkeyFilePath, JSON.stringify({ hotkey: newHotkey }), "utf-8")
-  return true
-})
-
-ipcMain.handle("hotkey:load", async () => {
-  try {
-    const data = await fs.readFile(hotkeyFilePath, "utf-8")
-    const parsed = JSON.parse(data)
-    if (typeof parsed.hotkey === "string" && parsed.hotkey.length > 0) {
-      return parsed.hotkey
-    }
-  } catch {}
-  return HOTKEY_DEFAULT
-})
-
-ipcMain.handle("settings:get-gsync-compat", () => {
-  return savedSettings.gsyncCompat === true
-})
-
-ipcMain.handle("settings:set-gsync-compat", async (_event, value: boolean) => {
-  savedSettings.gsyncCompat = value
-  await fs.writeFile(settingsFilePath, JSON.stringify(savedSettings), "utf-8")
   return true
 })
 
@@ -326,7 +261,7 @@ ipcMain.handle("overlay:list-displays", () => {
 ipcMain.handle("overlay:set-display", (_event, displayId: number) => {
   const displays = screen.getAllDisplays()
   const target = displays.find((d) => d.id === displayId)
-  if (!overlayWindow || overlayWindow.isDestroyed() || !target) return false
+  if (!overlayWindow || !target) return false
   const { x, y, width, height } = target.bounds
   overlayWindow.setBounds({ x, y, width, height })
   overlayWindow.setAlwaysOnTop(true, "screen-saver")
@@ -338,7 +273,7 @@ ipcMain.handle("overlay:set-display", (_event, displayId: number) => {
 })
 
 ipcMain.handle("overlay:get-display", () => {
-  if (!overlayWindow || overlayWindow.isDestroyed()) return null
+  if (!overlayWindow) return null
   const bounds = overlayWindow.getBounds()
   const displays = screen.getAllDisplays()
   const target = displays.find(
@@ -351,24 +286,17 @@ ipcMain.handle("overlay:get-display", () => {
   return target ? target.id : null
 })
 
-ipcMain.handle("config:export", async (_event, data: { name: string; config: CrosshairConfig }) => {
-  const defaultName = data.name?.trim()
-    ? `${data.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.json`
-    : "crosshair.json"
+ipcMain.handle("config:export", async (_event, config: CrosshairConfig) => {
   const options: SaveDialogOptions = {
     title: "Export Crosshair Config",
     filters: [{ name: "JSON Files", extensions: ["json"] }],
-    defaultPath: defaultName
+    defaultPath: "crosshair.json"
   }
   const result = settingsWindow
     ? await dialog.showSaveDialog(settingsWindow, options)
     : await dialog.showSaveDialog(options)
   if (result.canceled || !result.filePath) return false
-  await fs.writeFile(
-    result.filePath,
-    JSON.stringify({ name: data.name ?? "", config: data.config }, null, 2),
-    "utf-8"
-  )
+  await fs.writeFile(result.filePath, JSON.stringify(config, null, 2), "utf-8")
   return true
 })
 
@@ -393,15 +321,10 @@ ipcMain.handle("config:import", async () => {
 
     const allowedStyles: CrosshairStyle[] = ["classic", "dot", "circle", "x", "image"]
 
-    // Support both wrapped { name, config } and plain config formats
-    const isWrapped = "config" in parsed && parsed.config && typeof parsed.config === "object"
-    const source = isWrapped ? parsed.config : parsed
-    const importedName = isWrapped ? parsed.name : undefined
-
     const cfg: CrosshairConfig = {
       ...defaultConfig,
-      ...source,
-      style: allowedStyles.includes(source.style) ? source.style : defaultConfig.style
+      ...parsed,
+      style: allowedStyles.includes(parsed.style) ? parsed.style : defaultConfig.style
     }
 
     if (
@@ -412,7 +335,7 @@ ipcMain.handle("config:import", async () => {
       return null
     }
 
-    return { config: cfg, name: importedName }
+    return cfg
   } catch {
     return null
   }

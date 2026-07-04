@@ -24,16 +24,23 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
+    "@radix-ui/react-checkbox": "^1.3.2",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-slider": "^1.3.5",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@radix-ui/react-tooltip": "^1.2.7",
     "@tailwindcss/vite": "^4.1.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "discord-rpc": "^4.0.1",
     "electron-updater": "^6.3.9",
-    "lucide-react": "^1.16.0",
-    "ms": "^2.1.3",
-    "posthog-js": "^1.373.4",
-    "radix-ui": "latest",
-    "react-markdown": "^10.1.0",
+    "lucide-react": "^0.539.0",
+    "posthog-js": "^1.259.0",
     "react-router": "^7.8.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
@@ -44,14 +51,13 @@
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
-    "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^22.16.5",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.7.0",
-    "electron": "^41.0.0",
-    "electron-builder": "^26.8.1",
-    "electron-vite": "^5.0.0",
+    "electron": "^37.2.3",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^4.0.0",
     "eslint": "^9.31.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -64,20 +70,13 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "core-js",
       "electron",
-      "electron-winstaller",
-      "esbuild",
-      "protobufjs",
-      "register-scheme"
+      "esbuild"
     ]
   },
   "build": {
     "icon": "./resources/dotline",
     "appId": "com.parcoil.dotline",
-    "electronLanguages": [
-      "en"
-    ],
     "productName": "dotline",
     "directories": {
       "buildResources": "build"
@@ -85,11 +84,6 @@
     "files": [
       "!**/.vscode/*",
       "!src/*",
-      "!dotline.sh",
-      "!dotline.desktop",
-      "!.SRCINFO",
-      "!PKGBUILD",
-      "!images/*",
       "!electron.vite.config.{js,ts,mjs,cjs}",
       "!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}",
       "!{.env,.env.*,.npmrc,pnpm-lock.yaml}",

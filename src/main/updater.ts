@@ -10,45 +10,35 @@ export function initAutoUpdater(getMainWindow: GetMainWindow): void {
 
   autoUpdater.on("update-available", (info) => {
     const win = getMainWindow()
-    if (win && !win.isDestroyed()) {
-      win.webContents.send("updater:available", {
-        version: info.version,
-        releaseNotes: (info.releaseNotes as any) ?? undefined
-      })
-    }
+    win?.webContents.send("updater:available", {
+      version: info.version,
+      releaseNotes: (info.releaseNotes as any) ?? undefined
+    })
   })
 
   autoUpdater.on("update-not-available", () => {
     const win = getMainWindow()
-    if (win && !win.isDestroyed()) {
-      win.webContents.send("updater:not-available", { currentVersion: app.getVersion() })
-    }
+    win?.webContents.send("updater:not-available", { currentVersion: app.getVersion() })
   })
 
   autoUpdater.on("error", (err) => {
     const win = getMainWindow()
-    if (win && !win.isDestroyed()) {
-      win.webContents.send("updater:error", { message: String(err) })
-    }
+    win?.webContents.send("updater:error", { message: String(err) })
   })
 
   autoUpdater.on("download-progress", (progress) => {
     const win = getMainWindow()
-    if (win && !win.isDestroyed()) {
-      win.webContents.send("updater:download-progress", {
-        percent: progress.percent,
-        transferred: progress.transferred,
-        total: progress.total,
-        bytesPerSecond: progress.bytesPerSecond
-      })
-    }
+    win?.webContents.send("updater:download-progress", {
+      percent: progress.percent,
+      transferred: progress.transferred,
+      total: progress.total,
+      bytesPerSecond: progress.bytesPerSecond
+    })
   })
 
   autoUpdater.on("update-downloaded", (info) => {
     const win = getMainWindow()
-    if (win && !win.isDestroyed()) {
-      win.webContents.send("updater:downloaded", { version: info.version })
-    }
+    win?.webContents.send("updater:downloaded", { version: info.version })
   })
 
   ipcMain.handle("updater:get-version", () => app.getVersion())

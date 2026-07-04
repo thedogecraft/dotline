@@ -13,11 +13,6 @@ const CrosshairConfigContext = createContext<CrosshairConfigContextValue | undef
 export function CrosshairConfigProvider({ children }: { children: React.ReactNode }) {
   const overlayContext = useOverlayVisibility()
   const [config, setConfigState] = useState<CrosshairConfig>(defaultConfig)
-  const configRef = useRef(config)
-
-  useEffect(() => {
-    configRef.current = config
-  }, [config])
 
   useEffect(() => {
     const savedRaw = localStorage.getItem("currentConfig")
@@ -31,16 +26,9 @@ export function CrosshairConfigProvider({ children }: { children: React.ReactNod
   }, [])
 
   const setConfig = useCallback((newConfig: CrosshairConfig) => {
-    const prev = configRef.current
-    const merged = {
-      ...newConfig,
-      offsetX: newConfig.offsetX ?? prev.offsetX,
-      offsetY: newConfig.offsetY ?? prev.offsetY,
-      overlayDisplayId: newConfig.overlayDisplayId ?? prev.overlayDisplayId
-    }
-    setConfigState(merged)
-    localStorage.setItem("currentConfig", JSON.stringify(merged))
-    window.electron.ipcRenderer.invoke("overlay:update-config", merged).catch(() => {})
+    setConfigState(newConfig)
+    localStorage.setItem("currentConfig", JSON.stringify(newConfig))
+    window.electron.ipcRenderer.invoke("overlay:update-config", newConfig).catch(() => {})
   }, [])
 
   const lastToggle = useRef(0)
