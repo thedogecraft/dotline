@@ -23,11 +23,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install -g pnpm
-      - run: pnpm install --ignore-scripts
-      - run: pnpm approve-builds --all
-      - run: pnpm install
-      - run: pnpm run build
-      - run: pnpm run dist -- --publish always
+      - run: npm install
+      - run: npm run build
+      - run: npm run dist -- --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
