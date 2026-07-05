@@ -5,6 +5,7 @@ import { CrosshairConfig } from "@/types/crosshair"
 import { defaultConfig } from "@/types/crosshair"
 import Editor from "@/pages/editor"
 import Discover from "@/pages/discover"
+import ErrorBoundary from "@/components/ErrorBoundary"
 import Titlebar from "./components/titlebar"
 import Sidebar from "./components/sidebar"
 import Positioning from "./pages/positioning"
@@ -31,6 +32,7 @@ import { toast } from "sonner"
 import { Toaster } from "@/components/ui/sonner"
 import { OverlayProvider } from "@/hooks/overlay"
 import { CrosshairConfigProvider } from "@/hooks/crosshair-config"
+import Markdown from "react-markdown"
 
 function Overlay() {
   const [config, setConfig] = useState<CrosshairConfig>(defaultConfig)
@@ -209,13 +211,17 @@ function RoutedApp() {
       </AlertDialog>
 
       <Dialog open={patchNotesOpen} onOpenChange={() => {}}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()} className="max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Patch Notes for v{packageJson.version}</DialogTitle>
-            <DialogDescription asChild>
-              <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{patchNotes}</pre>
-            </DialogDescription>
+
+            <div className="max-h-[60vh] overflow-y-auto pr-2">
+              <div className="prose m-0 p-0 prose-headings:m-0 prose-headings:text-2xl prose-headings:text-primary prose-paragraph:mb-2 dark:prose-invert prose-ul:m-0 prose-li:m-0">
+                <Markdown>{patchNotes}</Markdown>
+              </div>
+            </div>
           </DialogHeader>
+
           <DialogFooter>
             <Button
               onClick={() => {
@@ -251,7 +257,9 @@ function App() {
   ) : (
     <OverlayProvider>
       <CrosshairConfigProvider>
-        <RoutedApp />
+        <ErrorBoundary>
+          <RoutedApp />
+        </ErrorBoundary>
       </CrosshairConfigProvider>
     </OverlayProvider>
   )

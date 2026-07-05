@@ -16,9 +16,18 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Crosshair } from "@/components/crosshair"
+import { ColorPicker } from "@/components/ui/color-picker"
 import { useLocation } from "react-router"
 import { toast } from "sonner"
 import { useCrosshairConfig } from "@/hooks/crosshair-config"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog"
 
 function Editor() {
   const location = useLocation()
@@ -30,12 +39,37 @@ function Editor() {
   const editingExisting = !!editingItemId
   const { config, setConfig } = useCrosshairConfig()
   const [saveName, setSaveName] = useState<string>("")
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [exportName, setExportName] = useState("")
 
   useEffect(() => {
     if (navInitial) {
+      const savedRaw = localStorage.getItem("currentConfig")
+      let currentConfig = defaultConfig
+      if (savedRaw) {
+        try {
+          currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
+        } catch {}
+      }
+      const newOffsetX = navInitial.offsetX ?? currentConfig.offsetX
+      const newOffsetY = navInitial.offsetY ?? currentConfig.offsetY
+      const offsetChanged =
+        (newOffsetX ?? 0) !== (currentConfig.offsetX ?? 0) ||
+        (newOffsetY ?? 0) !== (currentConfig.offsetY ?? 0)
+
       setConfig(navInitial)
+
+      if (offsetChanged) {
+        toast.success(`Crosshair changed offset — X: ${newOffsetX ?? 0}, Y: ${newOffsetY ?? 0}`)
+      }
     }
   }, [navInitial, setConfig])
+
+  useEffect(() => {
+    if (editingItemName) {
+      setSaveName(editingItemName)
+    }
+  }, [editingItemName])
 
   const handleChange = <K extends keyof CrosshairConfig>(
     key: K,
@@ -54,9 +88,10 @@ function Editor() {
       const library = loadLibrary()
       const idx = library.findIndex((i) => i.id === editingItemId)
       if (idx !== -1) {
-        library[idx] = { ...library[idx], config }
+        const updatedName = saveName.trim() || editingItemName || library[idx].name
+        library[idx] = { ...library[idx], name: updatedName, config }
         saveLibrary(library)
-        toast.success(`Saved to "${editingItemName || library[idx].name}"`)
+        toast.success(`Saved to "${updatedName}"`)
         return
       }
     }
@@ -74,21 +109,50 @@ function Editor() {
   }
 
   const handleExport = async (): Promise<void> => {
+    const name = exportName.trim() || editingItemName || "Crosshair"
     try {
-      await window.electron.ipcRenderer.invoke("config:export", config)
+      await window.electron.ipcRenderer.invoke("config:export", { name, config })
       toast.success("Exported current config")
+      setExportDialogOpen(false)
     } catch {
       toast.error("Failed to export config")
     }
   }
 
+  const handleExportClick = () => {
+    setExportName(editingItemName || saveName || "")
+    setExportDialogOpen(true)
+  }
+
   const handleImport = async (): Promise<void> => {
     const imported = await window.electron.ipcRenderer.invoke("config:import")
     if (imported) {
-      setConfig(imported as CrosshairConfig)
-      localStorage.setItem("currentConfig", JSON.stringify(imported))
-      await window.electron.ipcRenderer.invoke("overlay:update-config", imported as CrosshairConfig)
-      toast.success("Imported config successfully")
+      const cfg = (imported as any).config ?? imported
+      const name = (imported as any).name
+
+      const savedRaw = localStorage.getItem("currentConfig")
+      let currentConfig = defaultConfig
+      if (savedRaw) {
+        try {
+          currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
+        } catch {}
+      }
+      const newOffsetX = cfg.offsetX ?? currentConfig.offsetX
+      const newOffsetY = cfg.offsetY ?? currentConfig.offsetY
+      const offsetChanged =
+        (newOffsetX ?? 0) !== (currentConfig.offsetX ?? 0) ||
+        (newOffsetY ?? 0) !== (currentConfig.offsetY ?? 0)
+
+      setConfig(cfg)
+      if (name) setSaveName(name)
+
+      if (offsetChanged) {
+        toast.success(
+          `Crosshair imported — offset changed to X: ${newOffsetX ?? 0}, Y: ${newOffsetY ?? 0}`
+        )
+      } else {
+        toast.success("Imported config successfully")
+      }
     } else {
       toast.error("Import cancelled or failed")
     }
@@ -127,14 +191,21 @@ function Editor() {
   }
 
   const scaleConfigForPreview = (cfg: CrosshairConfig, size: number): CrosshairConfig => {
-    const base = Math.max((cfg.length + cfg.gap) * 2 + cfg.thickness * 2, 64)
+    const base =
+      cfg.style === "image"
+        ? Math.max(cfg.imageSize ?? 32, 64)
+        : Math.max((cfg.length + cfg.gap) * 2 + cfg.thickness * 2, 64)
     const scale = Math.min(1, size / base)
     return {
       ...cfg,
       enabled: true,
-      length: Math.max(1, Math.round(cfg.length * scale)),
-      gap: Math.max(0, Math.round(cfg.gap * scale)),
-      thickness: Math.max(1, Math.round(cfg.thickness * scale))
+      ...(cfg.style === "image"
+        ? { imageSize: Math.max(1, Math.round((cfg.imageSize ?? 32) * scale)) }
+        : {
+            length: Math.max(1, Math.round(cfg.length * scale)),
+            gap: Math.max(0, Math.round(cfg.gap * scale)),
+            thickness: Math.max(1, Math.round(cfg.thickness * scale))
+          })
     }
   }
 
@@ -155,7 +226,7 @@ function Editor() {
           </Button>
           <Button onClick={save}>Apply to Current</Button>
           <Button variant="outline" onClick={saveOverwriteOrNew}>
-            {editingItemName ? `Update "${editingItemName}"` : "Save to library"}
+            {editingExisting ? `Update "${saveName.trim() || editingItemName}"` : "Save to library"}
           </Button>
         </div>
       </header>
@@ -182,7 +253,7 @@ function Editor() {
             <Button onClick={handleImport} variant="outline" size="sm">
               Import
             </Button>
-            <Button onClick={handleExport} variant="outline" size="sm">
+            <Button onClick={handleExportClick} variant="outline" size="sm">
               Export
             </Button>
             <Button onClick={save} size="sm">
@@ -192,15 +263,23 @@ function Editor() {
 
           <Card className="mt-4">
             <CardHeader>
-              <CardTitle>Save to Library</CardTitle>
+              <CardTitle>{editingExisting ? "Name & Save" : "Save to Library"}</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center gap-2">
-              <Input
-                placeholder="Give your crosshair a name"
-                value={saveName}
-                onChange={(e) => setSaveName(e.target.value)}
-              />
-              <Button onClick={saveToLibrary}>{editingExisting ? "Save as New" : "Save"}</Button>
+            <CardContent className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder={editingExisting ? "Rename crosshair" : "Give your crosshair a name"}
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                />
+                <Button onClick={saveToLibrary}>{editingExisting ? "Save as New" : "Save"}</Button>
+              </div>
+              {editingExisting && (
+                <p className="text-xs text-muted-foreground">
+                  Change the name above and click <strong>Update</strong> in the header to save, or
+                  click <strong>Save as New</strong> to create a copy.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -229,12 +308,10 @@ function Editor() {
 
               <div>
                 <Label htmlFor="color-picker">Color</Label>
-                <Input
-                  id="color-picker"
-                  type="color"
+                <ColorPicker
                   value={config.color}
-                  onChange={(e) => handleChange("color", e.target.value)}
-                  className="w-20 h-10 p-0 border-none cursor-pointer mt-1"
+                  onChange={(value) => handleChange("color", value)}
+                  className="mt-1"
                 />
               </div>
             </CardContent>
@@ -289,14 +366,14 @@ function Editor() {
                 </div>
                 <div className="gap-3 flex flex-col">
                   <div className="flex justify-between">
-                    <Label>Image Size</Label>
+                    <Label>Image Scale</Label>
                     <span className="text-sm text-muted-foreground">{config.imageSize ?? 32}</span>
                   </div>
                   <Slider
                     value={[config.imageSize ?? 32]}
                     onValueChange={(val) => handleChange("imageSize", val[0])}
                     min={8}
-                    max={128}
+                    max={512}
                     step={1}
                   />
                 </div>
@@ -364,6 +441,20 @@ function Editor() {
                   step={1}
                 />
               </div>
+              <div className="gap-3 flex flex-col">
+                <div className="flex justify-between">
+                  <Label>Rotation</Label>
+                  <span className="text-sm text-muted-foreground">{config.rotation ?? 0}°</span>
+                </div>
+                <Slider
+                  value={[config.rotation ?? 0]}
+                  onValueChange={(val) => handleChange("rotation", val[0])}
+                  min={0}
+                  max={360}
+                  step={1}
+                />
+              </div>
+
               <div className="flex items-center justify-between">
                 <Label>Outline</Label>
                 <Switch
@@ -384,11 +475,10 @@ function Editor() {
                 <>
                   <div>
                     <Label>Outline Color</Label>
-                    <Input
-                      type="color"
+                    <ColorPicker
                       value={config.outlineColor ?? "#000000"}
-                      onChange={(e) => handleChange("outlineColor", e.target.value)}
-                      className="w-20 h-10 p-0 border-none cursor-pointer mt-1"
+                      onChange={(value) => handleChange("outlineColor", value)}
+                      className="mt-1"
                     />
                   </div>
 
@@ -453,11 +543,10 @@ function Editor() {
 
                   <div>
                     <Label>Center Dot Color</Label>
-                    <Input
-                      type="color"
+                    <ColorPicker
                       value={config.centerDotColor ?? config.color}
-                      onChange={(e) => handleChange("centerDotColor", e.target.value)}
-                      className="w-20 h-10 p-0 border-none cursor-pointer mt-1"
+                      onChange={(value) => handleChange("centerDotColor", value)}
+                      className="mt-1"
                     />
                   </div>
 
@@ -516,11 +605,10 @@ function Editor() {
                     <>
                       <div>
                         <Label>Center Dot Outline Color</Label>
-                        <Input
-                          type="color"
+                        <ColorPicker
                           value={config.centerDotOutlineColor ?? "#000000"}
-                          onChange={(e) => handleChange("centerDotOutlineColor", e.target.value)}
-                          className="w-20 h-10 p-0 border-none cursor-pointer mt-1"
+                          onChange={(value) => handleChange("centerDotOutlineColor", value)}
+                          className="mt-1"
                         />
                       </div>
 
@@ -561,8 +649,59 @@ function Editor() {
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Positioning</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="editor-offsetX">Offset X (px)</Label>
+                  <Input
+                    id="editor-offsetX"
+                    type="number"
+                    value={config.offsetX ?? 0}
+                    onChange={(e) => handleChange("offsetX", Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editor-offsetY">Offset Y (px)</Label>
+                  <Input
+                    id="editor-offsetY"
+                    type="number"
+                    value={config.offsetY ?? 0}
+                    onChange={(e) => handleChange("offsetY", Number(e.target.value))}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Export Crosshair</DialogTitle>
+            <DialogDescription>Give your crosshair a name before exporting.</DialogDescription>
+          </DialogHeader>
+          <Input
+            autoFocus
+            placeholder="Crosshair name"
+            value={exportName}
+            onChange={(e) => setExportName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleExport()
+            }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleExport}>Export</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
