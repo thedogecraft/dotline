@@ -79,11 +79,6 @@ function createOverlayWindow(): void {
   overlayWindow.setAlwaysOnTop(true, "screen-saver")
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
-  overlayWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: "deny" }
-  })
-
   overlayWindow.webContents.on("did-finish-load", () => {
     try {
       const target = currentOverlayDisplayId
