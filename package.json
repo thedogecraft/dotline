@@ -75,9 +75,6 @@
   "build": {
     "icon": "./resources/dotline",
     "appId": "com.parcoil.dotline",
-    "electronLanguages": [
-      "en"
-    ],
     "productName": "dotline",
     "directories": {
       "buildResources": "build"
