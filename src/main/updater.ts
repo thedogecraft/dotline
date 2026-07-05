@@ -3,6 +3,8 @@ import { autoUpdater } from "electron-updater"
 
 type GetMainWindow = () => BrowserWindow | null
 
+let autoCheckEnabled = true
+
 export function initAutoUpdater(getMainWindow: GetMainWindow): void {
   autoUpdater.autoDownload = false
   autoUpdater.disableWebInstaller = false
@@ -52,6 +54,10 @@ export function initAutoUpdater(getMainWindow: GetMainWindow): void {
     }
   })
 
+  ipcMain.handle("updater:set-auto-check-enabled", (_event, enabled: boolean) => {
+    autoCheckEnabled = enabled
+  })
+
   ipcMain.handle("updater:download", async () => {
     try {
       await autoUpdater.downloadUpdate()
@@ -72,6 +78,7 @@ export function initAutoUpdater(getMainWindow: GetMainWindow): void {
 }
 
 export async function triggerAutoUpdateCheck(): Promise<void> {
+  if (!autoCheckEnabled) return
   try {
     await autoUpdater.checkForUpdates()
   } catch {}

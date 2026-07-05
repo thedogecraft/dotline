@@ -243,6 +243,11 @@ function App() {
       if (discordRpcDisabled !== "1" && discordRpcDisabled !== "true") {
         window.electron.ipcRenderer.invoke("start-discord-rpc").catch(() => {})
       }
+
+      const autoUpdateDisabled = localStorage.getItem("autoUpdateCheckDisabled")
+      window.electron.ipcRenderer
+        .invoke("updater:set-auto-check-enabled", !(autoUpdateDisabled === "true"))
+        .catch(() => {})
     }
   }, [isOverlay])
 
