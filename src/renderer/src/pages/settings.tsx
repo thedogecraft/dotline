@@ -10,19 +10,11 @@ import { HotkeyRecorder } from "@/components/ui/hotkey-recorder"
 function Settings() {
   const { config, setConfig } = useCrosshairConfig()
   const [rpcEnabled, setRpcEnabled] = useState<boolean>(true)
-  const [autoCheckEnabled, setAutoCheckEnabled] = useState<boolean>(true)
   const [checking, setChecking] = useState(false)
 
   useEffect(() => {
     const disabled = localStorage.getItem("discordRpcDisabled")
     setRpcEnabled(!(disabled === "true"))
-  }, [])
-
-  useEffect(() => {
-    const disabled = localStorage.getItem("autoUpdateCheckDisabled")
-    const enabled = !(disabled === "true")
-    setAutoCheckEnabled(enabled)
-    window.electron.ipcRenderer.invoke("updater:set-auto-check-enabled", enabled)
   }, [])
 
   const handleToggleRpc = async (checked: boolean) => {
@@ -39,16 +31,6 @@ function Settings() {
   // const openLogs = async () => {
   //   await window.electron.ipcRenderer.invoke('app:open-logs')
   // }
-
-  const handleToggleAutoCheck = async (checked: boolean) => {
-    setAutoCheckEnabled(checked)
-    if (!checked) {
-      localStorage.setItem("autoUpdateCheckDisabled", "true")
-    } else {
-      localStorage.removeItem("autoUpdateCheckDisabled")
-    }
-    await window.electron.ipcRenderer.invoke("updater:set-auto-check-enabled", checked)
-  }
 
   const checkForUpdates = async () => {
     try {
@@ -99,24 +81,13 @@ function Settings() {
         <CardHeader>
           <CardTitle>Updates</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Check for updates automatically</Label>
-              <p className="text-sm text-muted-foreground">
-                Disable to hide the update prompt on startup.
-              </p>
-            </div>
-            <Switch checked={autoCheckEnabled} onCheckedChange={(v) => handleToggleAutoCheck(!!v)} />
+        <CardContent className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">Check for updates to Dotline.</p>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Check for updates to Dotline.</p>
-            </div>
-            <Button variant="outline" onClick={checkForUpdates} disabled={checking}>
-              {checking ? "Checking…" : "Check for updates"}
-            </Button>
-          </div>
+          <Button variant="outline" onClick={checkForUpdates} disabled={checking}>
+            {checking ? "Checking…" : "Check for updates"}
+          </Button>
         </CardContent>
       </Card>
       <Card>
