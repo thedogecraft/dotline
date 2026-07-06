@@ -7,7 +7,16 @@ import { CrosshairConfig, CrosshairLibraryItem, defaultConfig } from "@/types/cr
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { presets } from "@/lib/presets"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Home, Paintbrush, Import, Save, Trash2, Pencil, Download } from "lucide-react"
+import {
+  Home,
+  Paintbrush,
+  Import,
+  Save,
+  Trash2,
+  Pencil,
+  Download,
+  CrosshairIcon
+} from "lucide-react"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -295,13 +304,19 @@ function Discover() {
         <TabsContent value="library">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredLibrary.length === 0 ? (
-              <Card className="col-span-full">
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  {library.length === 0 && !q
-                    ? "No saved crosshairs yet."
-                    : "No matching results in your library."}
-                </CardContent>
-              </Card>
+              <div className="col-span-full text-center text-muted-foreground">
+                <EmptyState
+                  icon={CrosshairIcon}
+                  title={
+                    library.length === 0 && !q ? "No saved crosshairs yet" : "No matches found"
+                  }
+                  description={
+                    library.length === 0 && !q
+                      ? "Save your current config or import a preset to build your library."
+                      : "Try a different search term."
+                  }
+                />
+              </div>
             ) : (
               filteredLibrary.map((item) => (
                 <CrosshairCard
@@ -339,11 +354,11 @@ function Discover() {
         <TabsContent value="presets">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
             {filteredPresets.length === 0 ? (
-              <Card className="col-span-full">
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  No matching results in presets.
-                </CardContent>
-              </Card>
+              <EmptyState
+                icon={Paintbrush}
+                title="No matching presets"
+                description="Try adjusting your search or import a new preset."
+              />
             ) : (
               filteredPresets.map((preset) => (
                 <CrosshairCard
@@ -429,5 +444,25 @@ function Discover() {
     </div>
   )
 }
+
+const EmptyState = ({
+  icon: Icon,
+  title,
+  description
+}: {
+  icon: any
+  title: string
+  description: string
+}) => (
+  <Card className="col-span-full border-dashed bg-transparent shadow-none">
+    <CardContent className="flex flex-col items-center gap-2 py-14 text-center">
+      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
+        <Icon className="h-5 w-5 text-muted-foreground" />
+      </div>
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="max-w-70 text-sm text-muted-foreground">{description}</p>
+    </CardContent>
+  </Card>
+)
 
 export default Discover
