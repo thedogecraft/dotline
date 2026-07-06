@@ -41,6 +41,7 @@ function Editor() {
   const [saveName, setSaveName] = useState<string>("")
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [exportName, setExportName] = useState("")
+  const [exportFormat, setExportFormat] = useState<"dotline" | "json">("dotline")
 
   useEffect(() => {
     if (navInitial) {
@@ -111,8 +112,8 @@ function Editor() {
   const handleExport = async (): Promise<void> => {
     const name = exportName.trim() || editingItemName || "Crosshair"
     try {
-      await window.electron.ipcRenderer.invoke("config:export", { name, config })
-      toast.success("Exported current config")
+      await window.electron.ipcRenderer.invoke("config:export", { name, config, format: exportFormat })
+      toast.success(`Exported current config as .${exportFormat}`)
       setExportDialogOpen(false)
     } catch {
       toast.error("Failed to export config")
@@ -683,7 +684,7 @@ function Editor() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Export Crosshair</DialogTitle>
-            <DialogDescription>Give your crosshair a name before exporting.</DialogDescription>
+            <DialogDescription>Give your crosshair a name and choose a format.</DialogDescription>
           </DialogHeader>
           <Input
             autoFocus
@@ -694,11 +695,29 @@ function Editor() {
               if (e.key === "Enter") handleExport()
             }}
           />
+          <div className="flex gap-3 mt-2">
+            <Button
+              variant={exportFormat === "dotline" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => setExportFormat("dotline")}
+            >
+              .dotline <span className="text-xs ml-1 opacity-70">(recommended)</span>
+            </Button>
+            <Button
+              variant={exportFormat === "json" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => setExportFormat("json")}
+            >
+              .json
+            </Button>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleExport}>Export</Button>
+            <Button onClick={handleExport}>
+              Export as .{exportFormat}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -186,6 +186,8 @@ app.whenReady().then(() => {
     createMainWindow: () => createSettingsWindow()
   })
 
+  checkStartupArgs()
+
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -211,16 +213,64 @@ const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
 } else {
-  app.on("second-instance", () => {
+  app.on("second-instance", (_event, argv) => {
     if (settingsWindow) {
       if (settingsWindow.isMinimized()) settingsWindow.restore()
       settingsWindow.focus()
     }
+    const dotlineFile = argv.find((a) => a.endsWith(".dotline"))
+    if (dotlineFile) handleOpenedDotlineFile(dotlineFile)
   })
 
   app.on("before-quit", () => {
     globalShortcut.unregisterAll()
   })
+}
+
+app.on("open-file", (_event, filePath) => {
+  if (filePath.endsWith(".dotline")) {
+    handleOpenedDotlineFile(filePath)
+  }
+})
+
+async function handleOpenedDotlineFile(filePath: string): Promise<void> {
+  try {
+    const raw = await fs.readFile(filePath, "utf-8")
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== "object") return
+
+    const allowedStyles: CrosshairStyle[] = ["classic", "dot", "circle", "x", "image"]
+    const isWrapped = "config" in parsed && parsed.config && typeof parsed.config === "object"
+    const source = isWrapped ? parsed.config : parsed
+    const importedName: string | undefined = isWrapped ? parsed.name : undefined
+
+    const cfg: CrosshairConfig = {
+      ...defaultConfig,
+      ...source,
+      style: allowedStyles.includes(source.style) ? source.style : defaultConfig.style
+    }
+
+    if (
+      typeof cfg.enabled !== "boolean" ||
+      typeof cfg.color !== "string" ||
+      typeof cfg.opacity !== "number"
+    ) {
+      return
+    }
+
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.webContents.send("config:opened-file", { config: cfg, name: importedName })
+    }
+  } catch {
+    // ignore invalid files
+  }
+}
+
+function checkStartupArgs(): void {
+  const dotlineFile = process.argv.find((a) => a.endsWith(".dotline"))
+  if (dotlineFile) {
+    setTimeout(() => handleOpenedDotlineFile(dotlineFile), 500)
+  }
 }
 
 // search for "frontend" in your editor to find this
@@ -351,32 +401,41 @@ ipcMain.handle("overlay:get-display", () => {
   return target ? target.id : null
 })
 
-ipcMain.handle("config:export", async (_event, data: { name: string; config: CrosshairConfig }) => {
-  const defaultName = data.name?.trim()
-    ? `${data.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.json`
-    : "crosshair.json"
-  const options: SaveDialogOptions = {
-    title: "Export Crosshair Config",
-    filters: [{ name: "JSON Files", extensions: ["json"] }],
-    defaultPath: defaultName
+ipcMain.handle(
+  "config:export",
+  async (_event, data: { name: string; config: CrosshairConfig; format?: string }) => {
+    const isDotline = data.format === "dotline"
+    const ext = isDotline ? "dotline" : "json"
+    const defaultName = data.name?.trim()
+      ? `${data.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.${ext}`
+      : `crosshair.${ext}`
+    const options: SaveDialogOptions = {
+      title: "Export Crosshair Config",
+      filters: [{ name: isDotline ? "Dotline Files" : "JSON Files", extensions: [ext] }],
+      defaultPath: defaultName
+    }
+    const result = settingsWindow
+      ? await dialog.showSaveDialog(settingsWindow, options)
+      : await dialog.showSaveDialog(options)
+    if (result.canceled || !result.filePath) return false
+    await fs.writeFile(
+      result.filePath,
+      JSON.stringify({ name: data.name ?? "", config: data.config }, null, 2),
+      "utf-8"
+    )
+    return true
   }
-  const result = settingsWindow
-    ? await dialog.showSaveDialog(settingsWindow, options)
-    : await dialog.showSaveDialog(options)
-  if (result.canceled || !result.filePath) return false
-  await fs.writeFile(
-    result.filePath,
-    JSON.stringify({ name: data.name ?? "", config: data.config }, null, 2),
-    "utf-8"
-  )
-  return true
-})
+)
 
 ipcMain.handle("config:import", async () => {
   const options: OpenDialogOptions = {
     title: "Import Crosshair Config",
     properties: ["openFile"],
-    filters: [{ name: "JSON Files", extensions: ["json"] }]
+    filters: [
+      { name: "Crosshair Files", extensions: ["dotline", "json"] },
+      { name: "Dotline Files", extensions: ["dotline"] },
+      { name: "JSON Files", extensions: ["json"] }
+    ]
   }
 
   const result = settingsWindow

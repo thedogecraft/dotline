@@ -129,6 +129,12 @@
     "appImage": {
       "artifactName": "${name}-${version}.${ext}"
     },
+    "fileAssociations": {
+      "ext": "dotline",
+      "name": "Dotline Crosshair",
+      "description": "Dotline crosshair configuration file",
+      "role": "Editor"
+    },
     "npmRebuild": false,
     "publish": {
       "provider": "github",

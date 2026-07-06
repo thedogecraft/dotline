@@ -58,9 +58,13 @@ function Discover() {
     config: CrosshairConfig
     prevConfig: CrosshairConfig
   } | null>(null)
+  const [exportItemDialog, setExportItemDialog] = useState<CrosshairLibraryItem | null>(null)
+  const [exportFormat, setExportFormat] = useState<"dotline" | "json">("dotline")
 
   useEffect(() => {
     setLibrary(loadLibrary())
+    const onLibraryChanged = () => setLibrary(loadLibrary())
+    window.addEventListener("dotline-library-changed", onLibraryChanged)
     const savedRaw = localStorage.getItem("currentConfig")
     if (savedRaw) {
       try {
@@ -68,6 +72,7 @@ function Discover() {
         setCurrent({ ...defaultConfig, ...saved })
       } catch {}
     }
+    return () => window.removeEventListener("dotline-library-changed", onLibraryChanged)
   }, [])
 
   const addPresetToLibrary = (cfg: CrosshairConfig, name?: string) => {
@@ -154,12 +159,20 @@ function Discover() {
     }
   }
   const exportItem = async (item: CrosshairLibraryItem) => {
+    setExportItemDialog(item)
+    setExportFormat("dotline")
+  }
+
+  const doExportItem = async () => {
+    if (!exportItemDialog) return
     try {
       await window.electron.ipcRenderer.invoke("config:export", {
-        name: item.name,
-        config: item.config
+        name: exportItemDialog.name,
+        config: exportItemDialog.config,
+        format: exportFormat
       })
-      toast.success(`Exported "${item.name}"`)
+      toast.success(`Exported "${exportItemDialog.name}" as .${exportFormat}`)
+      setExportItemDialog(null)
     } catch {
       toast.error("Failed to export preset")
     }
@@ -438,6 +451,46 @@ function Discover() {
               Keep my offset
             </Button>
             <Button onClick={applyWithCrosshairOffset}>Use crosshair offset</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={exportItemDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setExportItemDialog(null)
+        }}
+      >
+        <AlertDialogContent forceMount>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Export Crosshair</AlertDialogTitle>
+            <AlertDialogDescription>
+              {exportItemDialog && (
+                <>Choose a format to export "{exportItemDialog.name}".</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3">
+            <Button
+              variant={exportFormat === "dotline" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => setExportFormat("dotline")}
+            >
+              .dotline <span className="text-xs ml-1 opacity-70">(recommended)</span>
+            </Button>
+            <Button
+              variant={exportFormat === "json" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => setExportFormat("json")}
+            >
+              .json
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setExportItemDialog(null)}>
+              Cancel
+            </Button>
+            <Button onClick={doExportItem}>Export as .{exportFormat}</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Routes, Route } from "react-router"
 import { Crosshair } from "@/components/crosshair"
-import { CrosshairConfig } from "@/types/crosshair"
+import { CrosshairConfig, CrosshairLibraryItem } from "@/types/crosshair"
 import { defaultConfig } from "@/types/crosshair"
 import Editor from "@/pages/editor"
 import Discover from "@/pages/discover"
@@ -69,6 +69,10 @@ function RoutedApp() {
   const [onboardingOpen, setOnboardingOpen] = useState(false)
   const [patchNotesOpen, setPatchNotesOpen] = useState(false)
   const [patchNotes, setPatchNotes] = useState("")
+  const [importedFileData, setImportedFileData] = useState<{
+    config: CrosshairConfig
+    name?: string
+  } | null>(null)
 
   useEffect(() => {
     const seen = localStorage.getItem("onboardingSeen")
@@ -95,6 +99,16 @@ function RoutedApp() {
     localStorage.setItem("onboardingSeen", "true")
     setOnboardingOpen(false)
   }
+
+  useEffect(() => {
+    const onFileOpened = (_e: unknown, data: { config: CrosshairConfig; name?: string }) => {
+      setImportedFileData(data)
+    }
+    window.electron.ipcRenderer.on("config:opened-file", onFileOpened as any)
+    return () => {
+      window.electron.ipcRenderer.removeListener("config:opened-file", onFileOpened as any)
+    }
+  }, [])
 
   useEffect(() => {
     const onAvailable = (_e: unknown, payload: { version?: string }) => {
@@ -145,6 +159,25 @@ function RoutedApp() {
 
   const handleRemindLater = () => {
     setUpdateOpen(false)
+  }
+
+  const handleImportFile = () => {
+    if (!importedFileData) return
+    const { config, name } = importedFileData
+    const LS_KEY = "crosshairLibrary"
+    const raw = localStorage.getItem(LS_KEY)
+    const library: CrosshairLibraryItem[] = raw ? JSON.parse(raw) : []
+    const item: CrosshairLibraryItem = {
+      id: Math.random().toString(36).slice(2, 10),
+      name: name || "Imported",
+      createdAt: Date.now(),
+      config
+    }
+    library.unshift(item)
+    localStorage.setItem(LS_KEY, JSON.stringify(library))
+    setImportedFileData(null)
+    window.dispatchEvent(new CustomEvent("dotline-library-changed"))
+    toast.success(`Imported "${item.name}" from file`)
   }
 
   return (
@@ -234,6 +267,39 @@ function RoutedApp() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertDialog
+        open={importedFileData !== null}
+        onOpenChange={(open) => {
+          if (!open) setImportedFileData(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import Crosshair File</AlertDialogTitle>
+            <AlertDialogDescription>
+              {importedFileData ? (
+                <>
+                  A crosshair configuration file was opened.
+                  {importedFileData.name ? (
+                    <>
+                      {" "}Name: <strong>{importedFileData.name}</strong>
+                    </>
+                  ) : null}
+                  {" "}Would you like to import it into your library?
+                </>
+              ) : (
+                "Would you like to import this crosshair configuration into your library?"
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setImportedFileData(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleImportFile}>Import</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Toaster richColors closeButton />
     </div>
   )
