@@ -9,6 +9,22 @@
 
 ![Dotline Showcase](/images/appscreenshot.png)
 
+## 📥 Download
+
+### Windows
+
+- [SourceForge](https://sourceforge.net/projects/dotline/) &ndash; NSIS installer & portable zip
+- [parcoil.com](https://parcoil.com/dotline) &ndash; direct download
+
+### Arch Linux
+
+- `yay -S dotline`
+
+### Ubuntu / Debian
+
+- [parcoil.com](https://parcoil.com/dotline) &ndash; direct download
+- [GitHub Releases](https://github.com/parcoil/dotline/releases) &ndash; AppImage & `.deb`
+
 ## ✨ Features
 
 - 🎯 Customizable Crosshairs
