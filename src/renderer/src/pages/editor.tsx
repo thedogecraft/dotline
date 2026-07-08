@@ -28,6 +28,7 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog"
+import { Moon, Sun } from "lucide-react"
 
 function Editor() {
   const location = useLocation()
@@ -39,6 +40,7 @@ function Editor() {
   const editingExisting = !!editingItemId
   const { config, setConfig } = useCrosshairConfig()
   const [saveName, setSaveName] = useState<string>("")
+  const [previewDark, setPreviewDark] = useState(() => localStorage.getItem("previewDark") === "true")
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [exportName, setExportName] = useState("")
   const [exportFormat, setExportFormat] = useState<"dotline" | "json">("dotline")
@@ -236,12 +238,26 @@ function Editor() {
         <div className="lg:col-span-5 lg:sticky lg:top-4 lg:self-start">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle>Preview</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Preview</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    const next = !previewDark
+                    setPreviewDark(next)
+                    localStorage.setItem("previewDark", String(next))
+                  }}
+                  title={previewDark ? "Switch to light background" : "Switch to dark background"}
+                >
+                  {previewDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-center">
                 <div
-                  className="rounded-md border bg-white relative flex items-center justify-center"
+                  className={`rounded-md border relative flex items-center justify-center ${previewDark ? "bg-neutral-900" : "bg-white"}`}
                   style={{ width: 320, height: 320 }}
                 >
                   <Crosshair mode="embed" config={scaleConfigForPreview(config, 300)} />
