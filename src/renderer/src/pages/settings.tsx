@@ -11,6 +11,7 @@ function Settings() {
   const [checking, setChecking] = useState(false)
   const [hotkey, setHotkey] = useState("CommandOrControl+Shift+X")
   const [gsyncCompat, setGsyncCompat] = useState<boolean>(false)
+  const [autoUpdate, setAutoUpdate] = useState<boolean>(true)
   const [crash, setCrash] = useState(false)
 
   useEffect(() => {
@@ -29,6 +30,13 @@ function Settings() {
     window.electron.ipcRenderer
       .invoke("settings:get-gsync-compat")
       .then(setGsyncCompat)
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    window.electron.ipcRenderer
+      .invoke("settings:get-auto-update")
+      .then(setAutoUpdate)
       .catch(() => {})
   }, [])
 
@@ -124,13 +132,30 @@ function Settings() {
         <CardHeader>
           <CardTitle>Updates</CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Check for updates to Dotline.</p>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Automatic update checks</Label>
+              <p className="text-sm text-muted-foreground">
+                Check for updates on startup. Disable this to avoid the update popup.
+              </p>
+            </div>
+            <Switch
+              checked={autoUpdate}
+              onCheckedChange={async (v) => {
+                setAutoUpdate(!!v)
+                await window.electron.ipcRenderer.invoke("settings:set-auto-update", !!v)
+              }}
+            />
           </div>
-          <Button variant="outline" onClick={checkForUpdates} disabled={checking}>
-            {checking ? "Checking…" : "Check for updates"}
-          </Button>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Check for updates to Dotline.</p>
+            </div>
+            <Button variant="outline" onClick={checkForUpdates} disabled={checking}>
+              {checking ? "Checking…" : "Check for updates"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
       <Card>

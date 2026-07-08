@@ -21,7 +21,7 @@ let currentHotkey = HOTKEY_DEFAULT
 const hotkeyFilePath = join(app.getPath("userData"), "hotkey.json")
 const settingsFilePath = join(app.getPath("userData"), "settings.json")
 
-function readSettingsSync(): { gsyncCompat?: boolean } {
+function readSettingsSync(): { gsyncCompat?: boolean; autoUpdate?: boolean } {
   try {
     if (existsSync(settingsFilePath)) {
       return JSON.parse(readFileSync(settingsFilePath, "utf-8"))
@@ -181,9 +181,11 @@ app.whenReady().then(() => {
   // Initialize auto updater and perform a background check
   initAutoUpdater(() => settingsWindow)
   // Delay a little to avoid stealing focus on cold start
-  setTimeout(() => {
-    void triggerAutoUpdateCheck()
-  }, 1500)
+  if (savedSettings.autoUpdate !== false) {
+    setTimeout(() => {
+      void triggerAutoUpdateCheck()
+    }, 1500)
+  }
 
   createAppTray({
     getMainWindow: () => settingsWindow,
@@ -360,6 +362,16 @@ ipcMain.handle("settings:get-gsync-compat", () => {
 
 ipcMain.handle("settings:set-gsync-compat", async (_event, value: boolean) => {
   savedSettings.gsyncCompat = value
+  await fs.writeFile(settingsFilePath, JSON.stringify(savedSettings), "utf-8")
+  return true
+})
+
+ipcMain.handle("settings:get-auto-update", () => {
+  return savedSettings.autoUpdate !== false
+})
+
+ipcMain.handle("settings:set-auto-update", async (_event, value: boolean) => {
+  savedSettings.autoUpdate = value
   await fs.writeFile(settingsFilePath, JSON.stringify(savedSettings), "utf-8")
   return true
 })
