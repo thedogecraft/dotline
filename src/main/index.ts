@@ -9,6 +9,10 @@ import { promises as fs, existsSync, readFileSync } from "fs"
 import { initAutoUpdater, triggerAutoUpdateCheck } from "./updater"
 import { CrosshairConfig, CrosshairStyle, defaultConfig } from "@/types/crosshair"
 
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error)
+})
+
 let settingsWindow: BrowserWindow | null = null
 let overlayWindow: BrowserWindow | null = null
 let currentOverlayDisplayId: number | null = null
@@ -122,7 +126,7 @@ function createOverlayWindow(): void {
   }
 
   screen.on("display-metrics-changed", () => {
-    if (!overlayWindow) return
+    if (!overlayWindow || overlayWindow.isDestroyed()) return
     const target = currentOverlayDisplayId
       ? screen.getAllDisplays().find((d) => d.id === currentOverlayDisplayId)
       : screen.getPrimaryDisplay()
@@ -214,7 +218,7 @@ if (!gotLock) {
   app.quit()
 } else {
   app.on("second-instance", (_event, argv) => {
-    if (settingsWindow) {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
       if (settingsWindow.isMinimized()) settingsWindow.restore()
       settingsWindow.focus()
     }

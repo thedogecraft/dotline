@@ -15,7 +15,7 @@ export function createAppTray(options: {
 
   const openApp = () => {
     const win = options.getMainWindow()
-    if (win) {
+    if (win && !win.isDestroyed()) {
       if (win.isMinimized()) win.restore()
       win.show()
       win.focus()
