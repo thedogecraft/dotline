@@ -465,9 +465,7 @@ function Discover() {
           <AlertDialogHeader>
             <AlertDialogTitle>Export Crosshair</AlertDialogTitle>
             <AlertDialogDescription>
-              {exportItemDialog && (
-                <>Choose a format to export "{exportItemDialog.name}".</>
-              )}
+              {exportItemDialog && <>Choose a format to export "{exportItemDialog.name}".</>}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-3">

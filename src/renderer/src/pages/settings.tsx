@@ -200,10 +200,7 @@ function Settings() {
               Trigger a test error to verify the error boundary is working.
             </p>
           </div>
-          <Button
-            variant="destructive"
-            onClick={() => setCrash(true)}
-          >
+          <Button variant="destructive" onClick={() => setCrash(true)}>
             Crash the app
           </Button>
         </CardContent>

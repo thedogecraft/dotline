@@ -40,7 +40,9 @@ function Editor() {
   const editingExisting = !!editingItemId
   const { config, setConfig } = useCrosshairConfig()
   const [saveName, setSaveName] = useState<string>("")
-  const [previewDark, setPreviewDark] = useState(() => localStorage.getItem("previewDark") === "true")
+  const [previewDark, setPreviewDark] = useState(
+    () => localStorage.getItem("previewDark") === "true"
+  )
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [exportName, setExportName] = useState("")
   const [exportFormat, setExportFormat] = useState<"dotline" | "json">("dotline")
@@ -114,7 +116,11 @@ function Editor() {
   const handleExport = async (): Promise<void> => {
     const name = exportName.trim() || editingItemName || "Crosshair"
     try {
-      await window.electron.ipcRenderer.invoke("config:export", { name, config, format: exportFormat })
+      await window.electron.ipcRenderer.invoke("config:export", {
+        name,
+        config,
+        format: exportFormat
+      })
       toast.success(`Exported current config as .${exportFormat}`)
       setExportDialogOpen(false)
     } catch {
@@ -731,9 +737,7 @@ function Editor() {
             <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleExport}>
-              Export as .{exportFormat}
-            </Button>
+            <Button onClick={handleExport}>Export as .{exportFormat}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

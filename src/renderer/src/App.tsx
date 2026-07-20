@@ -282,10 +282,11 @@ function RoutedApp() {
                   A crosshair configuration file was opened.
                   {importedFileData.name ? (
                     <>
-                      {" "}Name: <strong>{importedFileData.name}</strong>
+                      {" "}
+                      Name: <strong>{importedFileData.name}</strong>
                     </>
-                  ) : null}
-                  {" "}Would you like to import it into your library?
+                  ) : null}{" "}
+                  Would you like to import it into your library?
                 </>
               ) : (
                 "Would you like to import this crosshair configuration into your library?"
