@@ -1,28 +1,28 @@
 import { ipcMain } from "electron"
-import discordRPC from "discord-rpc"
+import { Client, ActivityType, PresenceBuilder } from "discord-rpc-new"
 import jsonData from "../../package.json"
 const clientId = "1403970186956247052"
-let rpcClient: discordRPC.Client | null = null
+let rpcClient: Client | null = null
 
 function startDiscordRPC(): boolean {
   try {
-    rpcClient = new discordRPC.Client({ transport: "ipc" })
+    rpcClient = new Client()
 
-    rpcClient.on("ready", () => {
-      rpcClient.setActivity({
-        details: "Aiming with precision",
-        state: `Using Dotline v${jsonData.version || "0"}`,
-        buttons: [
-          { label: "Download Dotline", url: "https://parcoil.com/dotline" },
-          { label: "Join Discord", url: "https://discord.com/invite/En5YJYWj3Z" }
-        ],
-        largeImageKey: "dotline2",
-        largeImageText: "Dotline Crosshair Overlay",
-        instance: false
+    const activity = new PresenceBuilder()
+      .setType(ActivityType.Playing)
+      .setDetails("Aiming with precision")
+      .setState(`Using Dotline v${jsonData.version || "0"}`)
+      .setLargeImage("dotline", "Dotline Crosshair Overlay")
+      .addButton("Download Dotline", "https://parcoil.com/dotline")
+      .addButton("Join Discord", "https://discord.com/invite/En5YJYWj3Z")
+      .build()
+
+    rpcClient
+      .login({ clientId })
+      .then(() => {
+        rpcClient?.setActivity(activity)
       })
-    })
-
-    rpcClient.login({ clientId }).catch(console.error)
+      .catch(console.error)
     return true
   } catch (error) {
     console.error("Failed to start Discord RPC:", error)
@@ -30,9 +30,9 @@ function startDiscordRPC(): boolean {
   }
 }
 
-function stopDiscordRPC(): boolean {
+async function stopDiscordRPC(): Promise<boolean> {
   if (rpcClient) {
-    rpcClient.destroy()
+    await rpcClient.destroy()
     rpcClient = null
     console.log("Discord RPC disconnected")
     return true

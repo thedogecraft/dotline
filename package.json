@@ -29,7 +29,7 @@
     "@tailwindcss/vite": "^4.1.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "discord-rpc": "^4.0.1",
+    "discord-rpc-new": "^1.4.1",
     "electron-updater": "^6.3.9",
     "lucide-react": "^1.16.0",
     "ms": "^2.1.3",
