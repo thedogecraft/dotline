@@ -12,7 +12,7 @@ function startDiscordRPC(): boolean {
       .setType(ActivityType.Playing)
       .setDetails("Aiming with precision")
       .setState(`Using Dotline v${jsonData.version || "0"}`)
-      .setLargeImage("dotline", "Dotline Crosshair Overlay")
+      .setLargeImage("dotline2", "Dotline Crosshair Overlay")
       .addButton("Download Dotline", "https://parcoil.com/dotline")
       .addButton("Join Discord", "https://discord.com/invite/En5YJYWj3Z")
       .build()
