@@ -5,6 +5,7 @@ import dotlineImage from "../../../../resources/dotline.png"
 import data from "../../../../package.json"
 import { Switch } from "@/components/ui/switch"
 import { useOverlayVisibility } from "@/hooks/overlay"
+import { Logo } from "./logo"
 function Titlebar(): React.JSX.Element {
   const { theme, setTheme } = useTheme()
   const { enabled, setEnabled } = useOverlayVisibility()
@@ -27,7 +28,7 @@ function Titlebar(): React.JSX.Element {
       }}
     >
       <div className="flex items-center gap-2 text-base font-semibold">
-        <img src={dotlineImage} alt="" className="w-5 h-5" />
+        <Logo className="w-4 h-4" />
         Dotline
         <div className="rounded-full bg-accent pl-2 pr-2 text-xs pt-1 pb-1 ">
           <p>Alpha</p>
