@@ -1,6 +1,4 @@
-import React from "react"
-
-export const Logo: React.FC = ({ className }) => {
+export const Logo = ({ className }: { className?: string }) => {
   return (
     <svg
       version="1.2"

@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 import { Sun, Moon, X, Square, Minus } from "lucide-react"
-import dotlineImage from "../../../../resources/dotline.png"
 import data from "../../../../package.json"
 import { Switch } from "@/components/ui/switch"
 import { useOverlayVisibility } from "@/hooks/overlay"
