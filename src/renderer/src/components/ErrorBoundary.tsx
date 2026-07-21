@@ -56,6 +56,12 @@ class ErrorBoundary extends Component<Props, State> {
               </CardContent>
               <CardFooter>
                 <Button onClick={this.handleRetry}>Try Again</Button>
+                <Button
+                  onClick={() => navigator.clipboard.writeText(errorMessage)}
+                  variant="secondary"
+                >
+                  Copy
+                </Button>
               </CardFooter>
             </Card>
           </div>
