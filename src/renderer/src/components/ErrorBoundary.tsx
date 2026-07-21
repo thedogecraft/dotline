@@ -21,15 +21,15 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error("ErrorBoundary caught:", error, errorInfo)
   }
 
-  handleRetry = () => {
+  handleRetry = (): void => {
     this.setState({ hasError: false, error: null })
   }
 
-  render() {
+  render(): React.JSX.Element {
     if (this.state.hasError && this.state.error) {
       const errorMessage =
         this.state.error instanceof Error ? this.state.error.message : String(this.state.error)
@@ -59,7 +59,7 @@ class ErrorBoundary extends Component<Props, State> {
       )
     }
 
-    return this.props.children
+    return this.props.children as React.JSX.Element
   }
 }
 

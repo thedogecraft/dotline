@@ -13,7 +13,7 @@ export function initAutoUpdater(getMainWindow: GetMainWindow): void {
     if (win && !win.isDestroyed()) {
       win.webContents.send("updater:available", {
         version: info.version,
-        releaseNotes: (info.releaseNotes as any) ?? undefined
+        releaseNotes: (info.releaseNotes as string | null) ?? undefined
       })
     }
   })
@@ -84,5 +84,7 @@ export function initAutoUpdater(getMainWindow: GetMainWindow): void {
 export async function triggerAutoUpdateCheck(): Promise<void> {
   try {
     await autoUpdater.checkForUpdates()
-  } catch {}
+  } catch {
+    // ignore update check errors
+  }
 }

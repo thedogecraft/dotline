@@ -1,7 +1,8 @@
+import React from "react"
 import { Toaster as Sonner, ToasterProps } from "sonner"
 import { useTheme } from "../theme-provider"
 
-const Toaster = ({ ...props }: ToasterProps) => {
+const Toaster = ({ ...props }: ToasterProps): React.JSX.Element => {
   const { theme } = useTheme()
 
   return (

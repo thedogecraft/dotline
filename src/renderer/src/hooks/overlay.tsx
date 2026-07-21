@@ -9,7 +9,7 @@ type OverlayContextValue = {
 const OverlayContext = createContext<OverlayContextValue | undefined>(undefined)
 
 // why are context so complacated. switch to zustand or jotai in the future
-export function OverlayProvider({ children }: { children: React.ReactNode }) {
+export function OverlayProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const [enabled, setEnabledState] = useState<boolean>(true)
 
   // initialize from localStorage
@@ -37,6 +37,7 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
   return <OverlayContext.Provider value={value}>{children}</OverlayContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useOverlayVisibility(): OverlayContextValue {
   const ctx = useContext(OverlayContext)
   if (!ctx) throw new Error("useOverlayVisibility must be used within OverlayProvider")

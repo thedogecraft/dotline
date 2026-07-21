@@ -26,7 +26,9 @@ function readSettingsSync(): { gsyncCompat?: boolean; autoUpdate?: boolean } {
     if (existsSync(settingsFilePath)) {
       return JSON.parse(readFileSync(settingsFilePath, "utf-8"))
     }
-  } catch {}
+  } catch {
+    // ignore invalid settings
+  }
   return {}
 }
 
@@ -109,7 +111,9 @@ function createOverlayWindow(): void {
         : screen.getPrimaryDisplay()
       const b = target?.bounds ?? { x, y, width, height }
       overlayWindow?.setBounds({ x: b.x, y: b.y, width: b.width, height: b.height })
-    } catch {}
+    } catch {
+      // display bounds lookup failed
+    }
     overlayWindow?.setIgnoreMouseEvents(true, { forward: true })
     overlayWindow?.showInactive()
   })
@@ -168,7 +172,9 @@ app.whenReady().then(() => {
         if (typeof parsed.hotkey === "string" && parsed.hotkey.length > 0) {
           currentHotkey = parsed.hotkey
         }
-      } catch {}
+      } catch {
+        // ignore invalid hotkey data
+      }
     })
     .catch(() => {})
     .finally(() => {
@@ -354,7 +360,9 @@ ipcMain.handle("hotkey:load", async () => {
     if (typeof parsed.hotkey === "string" && parsed.hotkey.length > 0) {
       return parsed.hotkey
     }
-  } catch {}
+  } catch {
+    // ignore invalid hotkey file
+  }
   return HOTKEY_DEFAULT
 })
 
@@ -383,8 +391,8 @@ ipcMain.handle("overlay:list-displays", () => {
   const primaryId = screen.getPrimaryDisplay().id
   return displays.map((d, idx) => ({
     id: d.id,
-    label: (d as any).label
-      ? (d as any).label
+    label: (d as Electron.Display & { label?: string }).label
+      ? (d as Electron.Display & { label?: string }).label
       : `Display ${idx + 1}${d.id === primaryId ? " (Primary)" : ""}`,
     bounds: d.bounds,
     scaleFactor: d.scaleFactor

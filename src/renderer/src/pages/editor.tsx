@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog"
 import { Moon, Sun } from "lucide-react"
 
-function Editor() {
+function Editor(): React.JSX.Element {
   const location = useLocation()
   type EditorNavState = { initialConfig?: CrosshairConfig; itemId?: string; itemName?: string }
   const state = (location.state ?? {}) as EditorNavState
@@ -54,7 +54,9 @@ function Editor() {
       if (savedRaw) {
         try {
           currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
-        } catch {}
+        } catch {
+          /* ignored */
+        }
       }
       const newOffsetX = navInitial.offsetX ?? currentConfig.offsetX
       const newOffsetY = navInitial.offsetY ?? currentConfig.offsetY
@@ -128,7 +130,7 @@ function Editor() {
     }
   }
 
-  const handleExportClick = () => {
+  const handleExportClick = (): void => {
     setExportName(editingItemName || saveName || "")
     setExportDialogOpen(true)
   }
@@ -136,15 +138,18 @@ function Editor() {
   const handleImport = async (): Promise<void> => {
     const imported = await window.electron.ipcRenderer.invoke("config:import")
     if (imported) {
-      const cfg = (imported as any).config ?? imported
-      const name = (imported as any).name
+      const importedRecord = imported as Record<string, unknown>
+      const cfg = (importedRecord.config as CrosshairConfig) ?? imported
+      const name = importedRecord.name as string | undefined
 
       const savedRaw = localStorage.getItem("currentConfig")
       let currentConfig = defaultConfig
       if (savedRaw) {
         try {
           currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
-        } catch {}
+        } catch {
+          /* ignored */
+        }
       }
       const newOffsetX = cfg.offsetX ?? currentConfig.offsetX
       const newOffsetY = cfg.offsetY ?? currentConfig.offsetY
@@ -185,7 +190,7 @@ function Editor() {
   function makeId(): string {
     return Math.random().toString(36).slice(2, 10)
   }
-  const saveToLibrary = () => {
+  const saveToLibrary = (): void => {
     const library = loadLibrary()
     const item: CrosshairLibraryItem = {
       id: makeId(),
@@ -315,7 +320,10 @@ function Editor() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between gap-4">
                 <Label>Style</Label>
-                <Select value={config.style} onValueChange={(v) => handleChange("style", v as any)}>
+                <Select
+                  value={config.style}
+                  onValueChange={(v) => handleChange("style", v as CrosshairConfig["style"])}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>

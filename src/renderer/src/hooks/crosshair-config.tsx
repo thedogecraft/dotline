@@ -10,7 +10,11 @@ type CrosshairConfigContextValue = {
 
 const CrosshairConfigContext = createContext<CrosshairConfigContextValue | undefined>(undefined)
 
-export function CrosshairConfigProvider({ children }: { children: React.ReactNode }) {
+export function CrosshairConfigProvider({
+  children
+}: {
+  children: React.ReactNode
+}): React.JSX.Element {
   const overlayContext = useOverlayVisibility()
   const [config, setConfigState] = useState<CrosshairConfig>(defaultConfig)
   const configRef = useRef(config)
@@ -26,7 +30,9 @@ export function CrosshairConfigProvider({ children }: { children: React.ReactNod
         const saved = JSON.parse(savedRaw) as Partial<CrosshairConfig>
         const merged = { ...defaultConfig, ...saved }
         setConfigState(merged)
-      } catch {}
+      } catch {
+        /* ignored */
+      }
     }
   }, [])
 
@@ -57,7 +63,7 @@ export function CrosshairConfigProvider({ children }: { children: React.ReactNod
   }, [toggleEnabled])
 
   useEffect(() => {
-    const listener = () => {
+    const listener = (): void => {
       toggleEnabledRef.current()
     }
     window.electron.ipcRenderer.on("toggle-crosshair", listener)
@@ -74,6 +80,7 @@ export function CrosshairConfigProvider({ children }: { children: React.ReactNod
   return <CrosshairConfigContext.Provider value={value}>{children}</CrosshairConfigContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCrosshairConfig(): CrosshairConfigContextValue {
   const ctx = useContext(CrosshairConfigContext)
   if (!ctx) throw new Error("useCrosshairConfig must be used within CrosshairConfigProvider")

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { HotkeyRecorder } from "@/components/ui/hotkey-recorder"
 
-function Settings() {
+function Settings(): React.JSX.Element {
   const [rpcEnabled, setRpcEnabled] = useState<boolean>(true)
   const [checking, setChecking] = useState(false)
   const [hotkey, setHotkey] = useState("CommandOrControl+Shift+X")
@@ -40,13 +40,13 @@ function Settings() {
       .catch(() => {})
   }, [])
 
-  const handleToggleGsync = async (checked: boolean) => {
+  const handleToggleGsync = async (checked: boolean): Promise<void> => {
     setGsyncCompat(checked)
     await window.electron.ipcRenderer.invoke("settings:set-gsync-compat", checked)
     toast.success("Restart required for this change to take effect.")
   }
 
-  const handleToggleRpc = async (checked: boolean) => {
+  const handleToggleRpc = async (checked: boolean): Promise<void> => {
     setRpcEnabled(checked)
     if (checked) {
       localStorage.removeItem("discordRpcDisabled")
@@ -61,7 +61,7 @@ function Settings() {
   //   await window.electron.ipcRenderer.invoke('app:open-logs')
   // }
 
-  const checkForUpdates = async () => {
+  const checkForUpdates = async (): Promise<void> => {
     try {
       setChecking(true)
       const res = await window.electron.ipcRenderer.invoke("updater:check")
@@ -171,7 +171,9 @@ function Settings() {
                 onClick={() => {
                   try {
                     window.open("https://discord.com/invite/En5YJYWj3Z", "_blank")
-                  } catch {}
+                  } catch {
+                    /* ignored */
+                  }
                 }}
               >
                 Support (on Discord)
@@ -180,7 +182,9 @@ function Settings() {
                 onClick={() => {
                   try {
                     window.open("https://github.com/Parcoil/dotline/issues/new/choose", "_blank")
-                  } catch {}
+                  } catch {
+                    /* ignored */
+                  }
                 }}
               >
                 Report / Request (on GitHub)

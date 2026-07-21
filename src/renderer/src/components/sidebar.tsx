@@ -6,7 +6,7 @@ import { Home, Settings, Menu, Pencil, Move3D } from "lucide-react"
 import Discord from "./discord"
 import Github from "./github"
 
-function Sidebar() {
+function Sidebar(): React.JSX.Element {
   const [collapsed, setCollapsed] = useState(true)
 
   useEffect(() => {
@@ -28,7 +28,7 @@ function Sidebar() {
 
   const footerItems = [{ to: "/settings", label: "Settings", icon: <Settings size={18} /> }]
 
-  const linkClasses = ({ isActive }) =>
+  const linkClasses = ({ isActive }: { isActive: boolean }): string =>
     cn(
       "group relative flex items-center rounded-md px-2.5 py-2 text-sm transition-all active:scale-95 gap-2",
       isActive
@@ -36,7 +36,7 @@ function Sidebar() {
         : "hover:bg-accent hover:text-accent-foreground"
     )
 
-  const Label = ({ children }) => (
+  const Label = ({ children }: { children: React.ReactNode }): React.JSX.Element => (
     <span
       className={cn(
         "whitespace-nowrap transition-opacity duration-200",
@@ -47,7 +47,7 @@ function Sidebar() {
     </span>
   )
   // use custom tooltip and not shadcn to fit the sidebar style
-  const Tooltip = ({ text }) =>
+  const Tooltip = ({ text }: { text: string }): React.JSX.Element | null =>
     collapsed ? (
       <span
         className={cn(

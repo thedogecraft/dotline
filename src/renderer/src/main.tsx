@@ -24,7 +24,7 @@ createRoot(document.getElementById("root")!).render(
       <Router>
         <PostHogProvider
           apiKey={"phc_yrKFrR0A214eflXwdPzDQ1Esf7qtw7USy0Zg8TdbqCT"}
-          //@ts-ignore
+          // @ts-ignore - HMR type
           options={options}
         >
           <App />

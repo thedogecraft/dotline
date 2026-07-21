@@ -7,13 +7,19 @@ export function Crosshair({
 }: {
   config: CrosshairConfig
   mode?: "overlay" | "embed"
-}) {
+}): React.JSX.Element | null {
   const outlineWithOpacity =
     config.outline && config.outlineColor
       ? hexToRgba(config.outlineColor, config.outlineOpacity ?? 1)
       : undefined
 
-  const renderRect = (x: number, y: number, width: number, height: number, rotate?: number) => {
+  const renderRect = (
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    rotate?: number
+  ): React.JSX.Element => {
     const outlineThickness = config.outlineThickness ?? 1
     const hasOutline = config.outline && config.outlineColor
 
@@ -75,7 +81,7 @@ export function Crosshair({
       : Math.max((config.length + config.gap) * 2 + config.thickness * 2, 64)
   const center = size / 2
 
-  const renderCenterDot = () => {
+  const renderCenterDot = (): React.JSX.Element | null => {
     if (!config.centerDot) return null
     const dotColor = hexToRgba(
       config.centerDotColor ?? config.color,
@@ -244,7 +250,7 @@ export function CrosshairPreview({
 }: {
   config: CrosshairConfig
   size?: number
-}) {
+}): React.JSX.Element {
   // Reuse renderer but constrain SVG to preview size by scaling lengths to fit
   const baseSize =
     config.style === "image"
@@ -271,7 +277,7 @@ export function CrosshairPreview({
   )
 }
 
-function hexToRgba(hex: string, alpha: number) {
+function hexToRgba(hex: string, alpha: number): string {
   const parsed = hex.replace("#", "")
   if (parsed.length !== 6) return `rgba(0, 0, 0, ${alpha})`
   const bigint = parseInt(parsed, 16)

@@ -1,4 +1,4 @@
-function Discord({ ...props }) {
+function Discord({ ...props }: React.SVGProps<SVGSVGElement>): React.JSX.Element {
   return (
     <div>
       <svg

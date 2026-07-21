@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { Input } from "./input"
 
 export function HotkeyRecorder({
@@ -7,7 +7,7 @@ export function HotkeyRecorder({
 }: {
   value: string
   onChange: (value: string) => void
-}) {
+}): React.JSX.Element {
   const [isRecording, setIsRecording] = useState(false)
 
   function normalizeKey(code: string): string {
@@ -37,7 +37,7 @@ export function HotkeyRecorder({
     "MetaRight"
   ])
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     e.preventDefault()
     const modifiers: string[] = []
     if (e.ctrlKey) modifiers.push("Control")
@@ -53,7 +53,7 @@ export function HotkeyRecorder({
     }
   }
 
-  const displayHotkey = (hk: string) => {
+  const displayHotkey = (hk: string): string => {
     return hk
       .replace("Control", "Ctrl")
       .replace("Command", "Cmd")

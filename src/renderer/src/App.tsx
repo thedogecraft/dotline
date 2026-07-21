@@ -34,14 +34,17 @@ import { OverlayProvider } from "@/hooks/overlay"
 import { CrosshairConfigProvider } from "@/hooks/crosshair-config"
 import Markdown from "react-markdown"
 
-function Overlay() {
+function Overlay(): React.JSX.Element {
   const [config, setConfig] = useState<CrosshairConfig>(defaultConfig)
 
   useEffect(() => {
-    const listener = (_event: unknown, cfg: CrosshairConfig) => setConfig(cfg)
-    window.electron.ipcRenderer.on("overlay:config", listener as any)
+    const listener = (_event: unknown, cfg: CrosshairConfig): void => setConfig(cfg)
+    window.electron.ipcRenderer.on("overlay:config", listener as (...args: unknown[]) => void)
     return () => {
-      window.electron.ipcRenderer.removeListener("overlay:config", listener as any)
+      window.electron.ipcRenderer.removeListener(
+        "overlay:config",
+        listener as (...args: unknown[]) => void
+      )
     }
   }, [])
 
@@ -53,14 +56,16 @@ function Overlay() {
         const merged = { ...defaultConfig, ...saved }
         setConfig(merged)
         window.electron.ipcRenderer.invoke("overlay:update-config", merged)
-      } catch {}
+      } catch {
+        /* ignored */
+      }
     }
   }, [])
 
   return <Crosshair config={config} />
 }
 
-function RoutedApp() {
+function RoutedApp(): React.JSX.Element {
   const [updateOpen, setUpdateOpen] = useState(false)
   const [updateVersion, setUpdateVersion] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
@@ -95,59 +100,89 @@ function RoutedApp() {
       .catch(() => {})
   }, [])
 
-  const handleDismissOnboarding = () => {
+  const handleDismissOnboarding = (): void => {
     localStorage.setItem("onboardingSeen", "true")
     setOnboardingOpen(false)
   }
 
   useEffect(() => {
-    const onFileOpened = (_e: unknown, data: { config: CrosshairConfig; name?: string }) => {
+    const onFileOpened = (_e: unknown, data: { config: CrosshairConfig; name?: string }): void => {
       setImportedFileData(data)
     }
-    window.electron.ipcRenderer.on("config:opened-file", onFileOpened as any)
+    window.electron.ipcRenderer.on(
+      "config:opened-file",
+      onFileOpened as (...args: unknown[]) => void
+    )
     return () => {
-      window.electron.ipcRenderer.removeListener("config:opened-file", onFileOpened as any)
+      window.electron.ipcRenderer.removeListener(
+        "config:opened-file",
+        onFileOpened as (...args: unknown[]) => void
+      )
     }
   }, [])
 
   useEffect(() => {
-    const onAvailable = (_e: unknown, payload: { version?: string }) => {
+    const onAvailable = (_e: unknown, payload: { version?: string }): void => {
       setUpdateVersion(payload?.version ?? null)
       setUpdateOpen(true)
       setIsDownloading(false)
       setDownloadPercent(0)
     }
-    const onNotAvailable = () => {
+    const onNotAvailable = (): void => {
       toast.success("You're up to date")
     }
-    const onError = (_e: unknown, payload: { message: string }) => {
+    const onError = (_e: unknown, payload: { message: string }): void => {
       toast.error(payload?.message ?? "Update error")
       setIsDownloading(false)
     }
-    const onProgress = (_e: unknown, payload: { percent: number }) => {
+    const onProgress = (_e: unknown, payload: { percent: number }): void => {
       setIsDownloading(true)
       setDownloadPercent(Math.max(0, Math.min(100, payload.percent || 0)))
     }
-    const onDownloaded = () => {
+    const onDownloaded = (): void => {
       setIsDownloading(false)
       setDownloadPercent(100)
     }
 
-    window.electron.ipcRenderer.on("updater:available", onAvailable as any)
-    window.electron.ipcRenderer.on("updater:not-available", onNotAvailable as any)
-    window.electron.ipcRenderer.on("updater:error", onError as any)
-    window.electron.ipcRenderer.on("updater:download-progress", onProgress as any)
-    window.electron.ipcRenderer.on("updater:downloaded", onDownloaded as any)
+    window.electron.ipcRenderer.on("updater:available", onAvailable as (...args: unknown[]) => void)
+    window.electron.ipcRenderer.on(
+      "updater:not-available",
+      onNotAvailable as (...args: unknown[]) => void
+    )
+    window.electron.ipcRenderer.on("updater:error", onError as (...args: unknown[]) => void)
+    window.electron.ipcRenderer.on(
+      "updater:download-progress",
+      onProgress as (...args: unknown[]) => void
+    )
+    window.electron.ipcRenderer.on(
+      "updater:downloaded",
+      onDownloaded as (...args: unknown[]) => void
+    )
     return () => {
-      window.electron.ipcRenderer.removeListener("updater:available", onAvailable as any)
-      window.electron.ipcRenderer.removeListener("updater:not-available", onNotAvailable as any)
-      window.electron.ipcRenderer.removeListener("updater:error", onError as any)
-      window.electron.ipcRenderer.removeListener("updater:download-progress", onProgress as any)
-      window.electron.ipcRenderer.removeListener("updater:downloaded", onDownloaded as any)
+      window.electron.ipcRenderer.removeListener(
+        "updater:available",
+        onAvailable as (...args: unknown[]) => void
+      )
+      window.electron.ipcRenderer.removeListener(
+        "updater:not-available",
+        onNotAvailable as (...args: unknown[]) => void
+      )
+      window.electron.ipcRenderer.removeListener(
+        "updater:error",
+        onError as (...args: unknown[]) => void
+      )
+      window.electron.ipcRenderer.removeListener(
+        "updater:download-progress",
+        onProgress as (...args: unknown[]) => void
+      )
+      window.electron.ipcRenderer.removeListener(
+        "updater:downloaded",
+        onDownloaded as (...args: unknown[]) => void
+      )
     }
   }, [])
 
-  const handleUpdateNow = async () => {
+  const handleUpdateNow = async (): Promise<void> => {
     if (isDownloaded) {
       await window.electron.ipcRenderer.invoke("updater:install")
       return
@@ -157,11 +192,11 @@ function RoutedApp() {
     await window.electron.ipcRenderer.invoke("updater:download")
   }
 
-  const handleRemindLater = () => {
+  const handleRemindLater = (): void => {
     setUpdateOpen(false)
   }
 
-  const handleImportFile = () => {
+  const handleImportFile = (): void => {
     if (!importedFileData) return
     const { config, name } = importedFileData
     const LS_KEY = "crosshairLibrary"
@@ -306,7 +341,7 @@ function RoutedApp() {
   )
 }
 
-function App() {
+function App(): React.JSX.Element {
   const params = new URLSearchParams(window.location.search)
   const isOverlay = params.get("overlay") === "1"
 

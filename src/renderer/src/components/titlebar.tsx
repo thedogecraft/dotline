@@ -5,12 +5,12 @@ import dotlineImage from "../../../../resources/dotline.png"
 import data from "../../../../package.json"
 import { Switch } from "@/components/ui/switch"
 import { useOverlayVisibility } from "@/hooks/overlay"
-function Titlebar() {
+function Titlebar(): React.JSX.Element {
   const { theme, setTheme } = useTheme()
   const { enabled, setEnabled } = useOverlayVisibility()
 
-  const handleWindowControl = (action: "minimize" | "maximize" | "close") => {
-    // @ts-ignore
+  const handleWindowControl = (action: "minimize" | "maximize" | "close"): void => {
+    // @ts-ignore - electron API type mismatch
     window.electron?.ipcRenderer?.send("window-control", action)
   }
 
@@ -18,12 +18,12 @@ function Titlebar() {
     <header
       className="flex items-center justify-between p-2 select-none bg-background border-b "
       style={{
-        // @ts-ignore
+        // @ts-ignore - CSS custom property not in type definitions
         WebkitAppRegion: "drag",
         userSelect: "none",
         height: 42,
-        /* @ts-ignore */
-        ["--titlebar-height" as any]: "42px"
+        /* @ts-ignore - CSS custom property not in type definitions */
+        ["--titlebar-height" as string]: "42px"
       }}
     >
       <div className="flex items-center gap-2 text-base font-semibold">
@@ -34,7 +34,7 @@ function Titlebar() {
         </div>
         <p className="text-sm text-muted-foreground">v{data.version}</p>
       </div>
-      {/* @ts-ignore */}
+      {/* @ts-ignore - CSS custom property not in type definitions */}
       <div className="flex items-center gap-3" style={{ WebkitAppRegion: "no-drag" }}>
         <div className="flex items-center gap-2 mr-2">
           <span className="text-xs text-muted-foreground">Crosshair</span>

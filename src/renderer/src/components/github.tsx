@@ -1,4 +1,4 @@
-function GitHub({ ...props }) {
+function GitHub({ ...props }: React.SVGProps<SVGSVGElement>): React.JSX.Element {
   return (
     <svg
       role="img"

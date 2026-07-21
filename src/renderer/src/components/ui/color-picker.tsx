@@ -7,7 +7,7 @@ interface ColorPickerProps {
   className?: string
 }
 
-export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
+export function ColorPicker({ value, onChange, className }: ColorPickerProps): React.JSX.Element {
   const [localValue, setLocalValue] = useState(value)
   const timeoutRef = useRef<number | null>(null)
   const isFocusedRef = useRef(false)
@@ -18,7 +18,7 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
     }
   }, [value])
 
-  const handleChange = (newValue: string) => {
+  const handleChange = (newValue: string): void => {
     setLocalValue(newValue)
 
     if (timeoutRef.current) {
@@ -30,11 +30,11 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
     }, 50)
   }
 
-  const handleFocus = () => {
+  const handleFocus = (): void => {
     isFocusedRef.current = true
   }
 
-  const handleBlur = () => {
+  const handleBlur = (): void => {
     isFocusedRef.current = false
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)

@@ -2,9 +2,9 @@ import { ipcMain } from "electron"
 import discordRPC from "discord-rpc"
 import jsonData from "../../package.json"
 const clientId = "1403970186956247052"
-let rpcClient
+let rpcClient: discordRPC.Client | null = null
 
-function startDiscordRPC() {
+function startDiscordRPC(): boolean {
   try {
     rpcClient = new discordRPC.Client({ transport: "ipc" })
 
@@ -30,7 +30,7 @@ function startDiscordRPC() {
   }
 }
 
-function stopDiscordRPC() {
+function stopDiscordRPC(): boolean {
   if (rpcClient) {
     rpcClient.destroy()
     rpcClient = null

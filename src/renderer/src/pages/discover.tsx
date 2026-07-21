@@ -39,15 +39,15 @@ function loadLibrary(): CrosshairLibraryItem[] {
   }
 }
 
-function saveLibrary(items: CrosshairLibraryItem[]) {
+function saveLibrary(items: CrosshairLibraryItem[]): void {
   localStorage.setItem(LS_KEY, JSON.stringify(items))
 }
 
-function makeId() {
+function makeId(): string {
   return Math.random().toString(36).slice(2, 10)
 }
 
-function Discover() {
+function Discover(): React.JSX.Element {
   const navigate = useNavigate()
   const [library, setLibrary] = useState<CrosshairLibraryItem[]>([])
   const [current, setCurrent] = useState<CrosshairConfig>(defaultConfig)
@@ -63,19 +63,21 @@ function Discover() {
 
   useEffect(() => {
     setLibrary(loadLibrary())
-    const onLibraryChanged = () => setLibrary(loadLibrary())
+    const onLibraryChanged = (): void => setLibrary(loadLibrary())
     window.addEventListener("dotline-library-changed", onLibraryChanged)
     const savedRaw = localStorage.getItem("currentConfig")
     if (savedRaw) {
       try {
         const saved = JSON.parse(savedRaw)
         setCurrent({ ...defaultConfig, ...saved })
-      } catch {}
+      } catch {
+        /* ignored */
+      }
     }
     return () => window.removeEventListener("dotline-library-changed", onLibraryChanged)
   }, [])
 
-  const addPresetToLibrary = (cfg: CrosshairConfig, name?: string) => {
+  const addPresetToLibrary = (cfg: CrosshairConfig, name?: string): void => {
     const item: CrosshairLibraryItem = {
       id: makeId(),
       name: name || `Crosshair ${library.length + 1}`,
@@ -88,13 +90,13 @@ function Discover() {
     toast.success(`Preset "${item.name}" added to library`)
   }
 
-  const doApply = async (cfg: CrosshairConfig) => {
+  const doApply = async (cfg: CrosshairConfig): Promise<void> => {
     localStorage.setItem("currentConfig", JSON.stringify(cfg))
     setCurrent(cfg)
     await window.electron.ipcRenderer.invoke("overlay:update-config", cfg)
   }
 
-  const applyConfig = (cfg: CrosshairConfig) => {
+  const applyConfig = (cfg: CrosshairConfig): void => {
     const hasCustomOffset = cfg.offsetX !== undefined || cfg.offsetY !== undefined
     if (hasCustomOffset) {
       const savedRaw = localStorage.getItem("currentConfig")
@@ -102,7 +104,9 @@ function Discover() {
       if (savedRaw) {
         try {
           prevConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
-        } catch {}
+        } catch {
+          /* ignored */
+        }
       }
       setOffsetDialog({ config: cfg, prevConfig })
       return
@@ -112,7 +116,9 @@ function Discover() {
     if (savedRaw) {
       try {
         currentConfig = { ...defaultConfig, ...JSON.parse(savedRaw) }
-      } catch {}
+      } catch {
+        /* ignored */
+      }
     }
     const merged = {
       ...cfg,
@@ -124,7 +130,7 @@ function Discover() {
     toast.success("Crosshair applied")
   }
 
-  const applyWithCrosshairOffset = async () => {
+  const applyWithCrosshairOffset = async (): Promise<void> => {
     if (!offsetDialog) return
     const { config: cfg } = offsetDialog
     setOffsetDialog(null)
@@ -134,7 +140,7 @@ function Discover() {
     )
   }
 
-  const keepCurrentOffset = async () => {
+  const keepCurrentOffset = async (): Promise<void> => {
     if (!offsetDialog) return
     const { config: cfg, prevConfig } = offsetDialog
     setOffsetDialog(null)
@@ -148,22 +154,24 @@ function Discover() {
     toast.success("Crosshair applied — your offset kept")
   }
 
-  const importPresetFile = async () => {
-    const result: any = await window.electron.ipcRenderer.invoke("config:import")
+  const importPresetFile = async (): Promise<void> => {
+    const result: Record<string, unknown> =
+      await window.electron.ipcRenderer.invoke("config:import")
+    const importResult = result as { config?: CrosshairConfig; name?: string }
     if (result) {
-      const cfg: CrosshairConfig = result.config ?? result
-      addPresetToLibrary(cfg, result.name || "Imported")
+      const cfg: CrosshairConfig = importResult.config ?? (result as unknown as CrosshairConfig)
+      addPresetToLibrary(cfg, importResult.name || "Imported")
       toast.success("Preset imported successfully")
     } else {
       toast.error("Failed to import preset")
     }
   }
-  const exportItem = async (item: CrosshairLibraryItem) => {
+  const exportItem = async (item: CrosshairLibraryItem): Promise<void> => {
     setExportItemDialog(item)
     setExportFormat("dotline")
   }
 
-  const doExportItem = async () => {
+  const doExportItem = async (): Promise<void> => {
     if (!exportItemDialog) return
     try {
       await window.electron.ipcRenderer.invoke("config:export", {
@@ -177,19 +185,19 @@ function Discover() {
       toast.error("Failed to export preset")
     }
   }
-  const deleteItem = (id: string) => {
+  const deleteItem = (id: string): void => {
     const next = library.filter((i) => i.id !== id)
     setLibrary(next)
     saveLibrary(next)
     toast.success("Preset deleted")
   }
 
-  const saveCurrentToLibrary = () => {
+  const saveCurrentToLibrary = (): void => {
     addPresetToLibrary(current, "Current Config")
     toast.success("Current config saved to library")
   }
 
-  const editItem = (item: CrosshairLibraryItem) => {
+  const editItem = (item: CrosshairLibraryItem): void => {
     navigate("/editor", {
       state: { itemId: item.id, initialConfig: item.config, itemName: item.name }
     })
@@ -221,7 +229,7 @@ function Discover() {
     creator?: string
     style?: string
     actions: React.ReactNode
-  }) => (
+  }): React.JSX.Element => (
     <Card className="group">
       <CardContent className="pt-4 space-y-2 flex flex-col items-center">
         <div
@@ -237,17 +245,23 @@ function Discover() {
       </CardContent>
     </Card>
   )
-  const TooltipButton = ({ children, label }: { children: React.ReactNode; label: string }) => (
+  const TooltipButton = ({
+    children,
+    label
+  }: {
+    children: React.ReactNode
+    label: string
+  }): React.JSX.Element => (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent side="bottom">{label}</TooltipContent>
     </Tooltip>
   )
-  const askDelete = (item: CrosshairLibraryItem) => {
+  const askDelete = (item: CrosshairLibraryItem): void => {
     setPendingDelete({ id: item.id, name: item.name })
     setConfirmOpen(true)
   }
-  const confirmDelete = () => {
+  const confirmDelete = (): void => {
     if (pendingDelete) {
       deleteItem(pendingDelete.id)
       setConfirmOpen(false)
@@ -256,7 +270,7 @@ function Discover() {
   }
 
   const q = query.trim().toLowerCase()
-  const matches = (text?: string) => (text || "").toLowerCase().includes(q)
+  const matches = (text?: string): boolean => (text || "").toLowerCase().includes(q)
   const filteredLibrary = q
     ? library.filter(
         (i) => matches(i.name) || matches(i.config.creator) || matches(String(i.config.style))
@@ -408,8 +422,8 @@ function Discover() {
             <AlertDialogDescription>
               {pendingDelete ? (
                 <>
-                  You are about to delete "{pendingDelete.name}" from your library. This action
-                  cannot be undone.
+                  You are about to delete &quot;{pendingDelete.name}&quot; from your library. This
+                  action cannot be undone.
                 </>
               ) : (
                 "This action cannot be undone."
@@ -440,8 +454,8 @@ function Discover() {
               {offsetDialog && (
                 <>
                   This crosshair has a custom offset (X: {offsetDialog.config.offsetX ?? 0}, Y:{" "}
-                  {offsetDialog.config.offsetY ?? 0}). Would you like to use this crosshair's offset
-                  or keep your current positioning?
+                  {offsetDialog.config.offsetY ?? 0}). Would you like to use this crosshair&apos;s
+                  offset or keep your current positioning?
                 </>
               )}
             </AlertDialogDescription>
@@ -465,7 +479,9 @@ function Discover() {
           <AlertDialogHeader>
             <AlertDialogTitle>Export Crosshair</AlertDialogTitle>
             <AlertDialogDescription>
-              {exportItemDialog && <>Choose a format to export "{exportItemDialog.name}".</>}
+              {exportItemDialog && (
+                <>Choose a format to export &quot;{exportItemDialog.name}&quot;.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-3">
@@ -501,10 +517,10 @@ const EmptyState = ({
   title,
   description
 }: {
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   title: string
   description: string
-}) => (
+}): React.JSX.Element => (
   <Card className="col-span-full border-dashed bg-transparent shadow-none">
     <CardContent className="flex flex-col items-center gap-2 py-14 text-center">
       <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">

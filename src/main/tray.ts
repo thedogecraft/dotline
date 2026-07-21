@@ -13,7 +13,7 @@ export function createAppTray(options: {
   tray = new Tray(trayIcon)
   tray.setToolTip("Dotline")
 
-  const openApp = () => {
+  const openApp = (): void => {
     const win = options.getMainWindow()
     if (win && !win.isDestroyed()) {
       if (win.isMinimized()) win.restore()
