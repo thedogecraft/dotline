@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import { CrosshairConfig } from "../../../types/crosshair"
 import type { CrosshairLibraryItem } from "../../../types/crosshair"
 import { Label } from "../components/ui/label"
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select"
 import { Crosshair } from "@/components/crosshair"
 import { ColorPicker } from "@/components/ui/color-picker"
-import { useLocation } from "react-router"
+import { useLocation, useBlocker } from "react-router"
 import { toast } from "sonner"
 import { useCrosshairConfig } from "@/hooks/crosshair-config"
 import {
@@ -28,24 +28,76 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog"
-import { Moon, Sun } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter
+} from "@/components/ui/alert-dialog"
+import { Moon, Sun, Plus, Pencil } from "lucide-react"
+
+const LS_KEY = "crosshairLibrary"
+
+function loadLibrary(): CrosshairLibraryItem[] {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+  } catch {
+    return []
+  }
+}
+
+function saveLibrary(items: CrosshairLibraryItem[]): void {
+  localStorage.setItem(LS_KEY, JSON.stringify(items))
+}
+
+function makeId(): string {
+  return Math.random().toString(36).slice(2, 10)
+}
+
+type PendingAction = "navigate" | "create-new" | "edit" | null
 
 function Editor(): React.JSX.Element {
   const location = useLocation()
   type EditorNavState = { initialConfig?: CrosshairConfig; itemId?: string; itemName?: string }
   const state = (location.state ?? {}) as EditorNavState
   const navInitial = state.initialConfig
-  const editingItemId = state.itemId
-  const editingItemName = state.itemName
-  const editingExisting = !!editingItemId
   const { config, setConfig } = useCrosshairConfig()
-  const [saveName, setSaveName] = useState<string>("")
+
+  const [editingItemId, setEditingItemId] = useState<string | undefined>(state.itemId)
+  const [editingItemName, setEditingItemName] = useState<string | undefined>(state.itemName)
+  const editingExisting = !!editingItemId
+
+  const [saveName, setSaveName] = useState<string>(state.itemName ?? "")
   const [previewDark, setPreviewDark] = useState(
     () => localStorage.getItem("previewDark") === "true"
   )
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [exportName, setExportName] = useState("")
   const [exportFormat, setExportFormat] = useState<"dotline" | "json">("dotline")
+
+  const baselineConfig = useRef<string>(JSON.stringify(config))
+  const dirty = useMemo(() => JSON.stringify(config) !== baselineConfig.current, [config])
+
+  const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false)
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
+
+  const [libraryPickerOpen, setLibraryPickerOpen] = useState(false)
+  const [library, setLibrary] = useState<CrosshairLibraryItem[]>([])
+
+  const blocker = useBlocker(dirty)
+
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      setPendingAction("navigate")
+      setUnsavedDialogOpen(true)
+    }
+  }, [blocker.state])
 
   useEffect(() => {
     if (navInitial) {
@@ -65,6 +117,7 @@ function Editor(): React.JSX.Element {
         (newOffsetY ?? 0) !== (currentConfig.offsetY ?? 0)
 
       setConfig(navInitial)
+      baselineConfig.current = JSON.stringify(navInitial)
 
       if (offsetChanged) {
         toast.success(`Crosshair changed offset — X: ${newOffsetX ?? 0}, Y: ${newOffsetY ?? 0}`)
@@ -78,6 +131,16 @@ function Editor(): React.JSX.Element {
     }
   }, [editingItemName])
 
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent): void => {
+      if (dirty) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [dirty])
+
   const handleChange = <K extends keyof CrosshairConfig>(
     key: K,
     value: CrosshairConfig[K]
@@ -86,33 +149,34 @@ function Editor(): React.JSX.Element {
   }
 
   const save = async (): Promise<void> => {
-    // Config is already applied via setConfig
     toast.success("Applied current config")
   }
 
   const saveOverwriteOrNew = (): void => {
     if (editingExisting && editingItemId) {
-      const library = loadLibrary()
-      const idx = library.findIndex((i) => i.id === editingItemId)
+      const lib = loadLibrary()
+      const idx = lib.findIndex((i) => i.id === editingItemId)
       if (idx !== -1) {
-        const updatedName = saveName.trim() || editingItemName || library[idx].name
-        library[idx] = { ...library[idx], name: updatedName, config }
-        saveLibrary(library)
+        const updatedName = saveName.trim() || editingItemName || lib[idx].name
+        lib[idx] = { ...lib[idx], name: updatedName, config }
+        saveLibrary(lib)
         toast.success(`Saved to "${updatedName}"`)
+        baselineConfig.current = JSON.stringify(config)
         return
       }
     }
-    const library = loadLibrary()
+    const lib = loadLibrary()
     const item: CrosshairLibraryItem = {
       id: makeId(),
-      name: saveName && saveName.trim() ? saveName.trim() : `Crosshair ${library.length + 1}`,
+      name: saveName && saveName.trim() ? saveName.trim() : `Crosshair ${lib.length + 1}`,
       createdAt: Date.now(),
       config
     }
-    const next = [item, ...library]
+    const next = [item, ...lib]
     saveLibrary(next)
     setSaveName("")
     toast.success(`Saved "${item.name}" to library`)
+    baselineConfig.current = JSON.stringify(config)
   }
 
   const handleExport = async (): Promise<void> => {
@@ -158,6 +222,7 @@ function Editor(): React.JSX.Element {
         (newOffsetY ?? 0) !== (currentConfig.offsetY ?? 0)
 
       setConfig(cfg)
+      baselineConfig.current = JSON.stringify(cfg)
       if (name) setSaveName(name)
 
       if (offsetChanged) {
@@ -172,36 +237,19 @@ function Editor(): React.JSX.Element {
     }
   }
 
-  const LS_KEY = "crosshairLibrary"
-  function loadLibrary(): CrosshairLibraryItem[] {
-    try {
-      const raw = localStorage.getItem(LS_KEY)
-      if (!raw) return []
-      const parsed = JSON.parse(raw)
-      if (!Array.isArray(parsed)) return []
-      return parsed
-    } catch {
-      return []
-    }
-  }
-  function saveLibrary(items: CrosshairLibraryItem[]): void {
-    localStorage.setItem(LS_KEY, JSON.stringify(items))
-  }
-  function makeId(): string {
-    return Math.random().toString(36).slice(2, 10)
-  }
   const saveToLibrary = (): void => {
-    const library = loadLibrary()
+    const lib = loadLibrary()
     const item: CrosshairLibraryItem = {
       id: makeId(),
-      name: saveName && saveName.trim() ? saveName.trim() : `Crosshair ${library.length + 1}`,
+      name: saveName && saveName.trim() ? saveName.trim() : `Crosshair ${lib.length + 1}`,
       createdAt: Date.now(),
       config
     }
-    const next = [item, ...library]
+    const next = [item, ...lib]
     saveLibrary(next)
     setSaveName("")
     toast.success(`Saved "${item.name}" to library`)
+    baselineConfig.current = JSON.stringify(config)
   }
 
   const scaleConfigForPreview = (cfg: CrosshairConfig, size: number): CrosshairConfig => {
@@ -223,6 +271,110 @@ function Editor(): React.JSX.Element {
     }
   }
 
+  const executePendingAction = (): void => {
+    const action = pendingAction
+    setPendingAction(null)
+
+    switch (action) {
+      case "navigate":
+        if (blocker.state === "blocked") {
+          blocker.proceed?.()
+        }
+        break
+      case "create-new":
+        setConfig(defaultConfig)
+        baselineConfig.current = JSON.stringify(defaultConfig)
+        setSaveName("")
+        setEditingItemId(undefined)
+        setEditingItemName(undefined)
+        toast.success("Started new crosshair")
+        break
+      case "edit":
+        setLibrary(loadLibrary())
+        setLibraryPickerOpen(true)
+        break
+    }
+  }
+
+  const handleUnsavedSave = (): void => {
+    saveOverwriteOrNew()
+    setUnsavedDialogOpen(false)
+    executePendingAction()
+  }
+
+  const handleUnsavedDiscard = (): void => {
+    setUnsavedDialogOpen(false)
+    executePendingAction()
+  }
+
+  const handleUnsavedCancel = (): void => {
+    setUnsavedDialogOpen(false)
+    setPendingAction(null)
+    if (blocker.state === "blocked") {
+      blocker.reset?.()
+    }
+  }
+
+  const handleCreateNew = (): void => {
+    if (dirty) {
+      setPendingAction("create-new")
+      setUnsavedDialogOpen(true)
+    } else {
+      setConfig(defaultConfig)
+      baselineConfig.current = JSON.stringify(defaultConfig)
+      setSaveName("")
+      setEditingItemId(undefined)
+      setEditingItemName(undefined)
+      toast.success("Started new crosshair")
+    }
+  }
+
+  const handleEditClick = (): void => {
+    if (dirty) {
+      setPendingAction("edit")
+      setUnsavedDialogOpen(true)
+    } else {
+      setLibrary(loadLibrary())
+      setLibraryPickerOpen(true)
+    }
+  }
+
+  const handleLibraryPick = (item: CrosshairLibraryItem): void => {
+    setLibraryPickerOpen(false)
+    setConfig(item.config)
+    baselineConfig.current = JSON.stringify(item.config)
+    setEditingItemId(item.id)
+    setEditingItemName(item.name)
+    setSaveName(item.name)
+    toast.success(`Editing "${item.name}"`)
+  }
+
+  const unsavedDialogTitle = useMemo(() => {
+    switch (pendingAction) {
+      case "create-new":
+        return "Unsaved Changes"
+      case "edit":
+        return "Unsaved Changes"
+      case "navigate":
+        return "Leave Editor?"
+      default:
+        return "Unsaved Changes"
+    }
+  }, [pendingAction])
+
+  const unsavedDialogDescription = useMemo(() => {
+    switch (pendingAction) {
+      case "create-new":
+        return "You have unsaved changes. Do you want to save before creating a new crosshair?"
+      case "edit":
+        return "You have unsaved changes. Do you want to save before editing a different crosshair?"
+      case "navigate":
+        return "You have unsaved changes that will be lost if you leave the editor."
+      default:
+        return "You have unsaved changes."
+    }
+  }, [pendingAction])
+
   return (
     <div className="max-w-7xl mx-auto space-y-4">
       <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -231,10 +383,20 @@ function Editor(): React.JSX.Element {
           <p className="text-sm text-muted-foreground mt-1">
             {editingExisting
               ? `Editing: ${editingItemName ?? "Saved crosshair"}`
-              : "Editing: New crosshair"}
+              : "Creating: New crosshair"}
+            {dirty && <span className="ml-2 text-yellow-500">(unsaved)</span>}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={handleCreateNew}>
+            <Plus className="w-4 h-4 mr-1.5" />
+            Create New
+          </Button>
+          <Button variant="outline" onClick={handleEditClick}>
+            <Pencil className="w-4 h-4 mr-1.5" />
+            Edit
+          </Button>
+          <div className="w-px bg-border" />
           <Button variant="outline" onClick={() => setConfig(defaultConfig)}>
             Reset
           </Button>
@@ -710,6 +872,7 @@ function Editor(): React.JSX.Element {
           </Card>
         </div>
       </div>
+
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -746,6 +909,62 @@ function Editor(): React.JSX.Element {
               Cancel
             </Button>
             <Button onClick={handleExport}>Export as .{exportFormat}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={unsavedDialogOpen} onOpenChange={setUnsavedDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{unsavedDialogTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{unsavedDialogDescription}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={handleUnsavedCancel}>
+              Cancel
+            </Button>
+            <Button variant="outline" onClick={handleUnsavedDiscard}>
+              Don&apos;t Save
+            </Button>
+            <Button onClick={handleUnsavedSave}>Save</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={libraryPickerOpen} onOpenChange={setLibraryPickerOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Crosshair</DialogTitle>
+            <DialogDescription>Select a crosshair from your library to edit.</DialogDescription>
+          </DialogHeader>
+          {library.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              <p className="text-sm">Your library is empty.</p>
+              <p className="text-xs mt-1">Save a crosshair first, then come back to edit it.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 py-2">
+              {library.map((item) => (
+                <button
+                  key={item.id}
+                  className="group flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors hover:bg-accent cursor-pointer"
+                  onClick={() => handleLibraryPick(item)}
+                >
+                  <div
+                    className="rounded-md border bg-foreground/40 dark:bg-background relative flex items-center justify-center"
+                    style={{ width: 100, height: 100 }}
+                  >
+                    <Crosshair mode="embed" config={scaleConfigForPreview(item.config, 90)} />
+                  </div>
+                  <p className="text-xs font-medium truncate w-full text-center">{item.name}</p>
+                </button>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLibraryPickerOpen(false)}>
+              Cancel
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

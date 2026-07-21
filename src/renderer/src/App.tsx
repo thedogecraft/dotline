@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { Routes, Route } from "react-router"
+import { createHashRouter, RouterProvider, Outlet } from "react-router"
 import { Crosshair } from "@/components/crosshair"
 import { CrosshairConfig, CrosshairLibraryItem } from "@/types/crosshair"
 import { defaultConfig } from "@/types/crosshair"
@@ -65,7 +65,7 @@ function Overlay(): React.JSX.Element {
   return <Crosshair config={config} />
 }
 
-function RoutedApp(): React.JSX.Element {
+function Layout(): React.JSX.Element {
   const [updateOpen, setUpdateOpen] = useState(false)
   const [updateVersion, setUpdateVersion] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
@@ -221,12 +221,7 @@ function RoutedApp(): React.JSX.Element {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-auto p-4">
-          <Routes>
-            <Route path="/" element={<Discover />} />
-            <Route path="/positioning" element={<Positioning />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/editor" element={<Editor />} />
-          </Routes>
+          <Outlet />
         </main>
       </div>
       <Dialog open={updateOpen} onOpenChange={setUpdateOpen}>
@@ -345,6 +340,31 @@ function App(): React.JSX.Element {
   const params = new URLSearchParams(window.location.search)
   const isOverlay = params.get("overlay") === "1"
 
+  const router = useMemo(
+    () =>
+      createHashRouter([
+        {
+          path: "/",
+          element: (
+            <OverlayProvider>
+              <CrosshairConfigProvider>
+                <ErrorBoundary>
+                  <Layout />
+                </ErrorBoundary>
+              </CrosshairConfigProvider>
+            </OverlayProvider>
+          ),
+          children: [
+            { index: true, element: <Discover /> },
+            { path: "positioning", element: <Positioning /> },
+            { path: "settings", element: <Settings /> },
+            { path: "editor", element: <Editor /> }
+          ]
+        }
+      ]),
+    []
+  )
+
   useEffect(() => {
     if (!isOverlay) {
       const discordRpcDisabled = localStorage.getItem("discordRpcDisabled")
@@ -354,17 +374,7 @@ function App(): React.JSX.Element {
     }
   }, [isOverlay])
 
-  return isOverlay ? (
-    <Overlay />
-  ) : (
-    <OverlayProvider>
-      <CrosshairConfigProvider>
-        <ErrorBoundary>
-          <RoutedApp />
-        </ErrorBoundary>
-      </CrosshairConfigProvider>
-    </OverlayProvider>
-  )
+  return isOverlay ? <Overlay /> : <RouterProvider router={router} />
 }
 
 export default App
