@@ -44,6 +44,7 @@ function createSettingsWindow(): void {
     show: false,
     frame: false,
     autoHideMenuBar: true,
+    title: "Dotline Settings",
     ...(process.platform === "linux"
       ? { icon: dotlinePng }
       : {
@@ -84,6 +85,7 @@ function createOverlayWindow(): void {
     show: false,
     frame: false,
     transparent: true,
+    title: "Dotline Crosshair",
     hasShadow: false,
     resizable: false,
     skipTaskbar: true,
