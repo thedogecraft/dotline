@@ -16,7 +16,7 @@ function startDiscordRPC(): boolean {
           { label: "Download Dotline", url: "https://parcoil.com/dotline" },
           { label: "Join Discord", url: "https://discord.com/invite/En5YJYWj3Z" }
         ],
-        largeImageKey: "dotline",
+        largeImageKey: "dotline2",
         largeImageText: "Dotline Crosshair Overlay",
         instance: false
       })
