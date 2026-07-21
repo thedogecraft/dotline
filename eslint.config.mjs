@@ -6,7 +6,10 @@ import eslintPluginReactRefresh from "eslint-plugin-react-refresh"
 
 export default tseslint.config(
   { ignores: ["**/node_modules", "**/dist", "**/out"] },
-  tseslint.configs.recommended,
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [tseslint.configs.recommended]
+  },
   eslintPluginReact.configs.flat.recommended,
   eslintPluginReact.configs.flat["jsx-runtime"],
   {
