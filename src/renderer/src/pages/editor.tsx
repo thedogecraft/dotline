@@ -618,9 +618,9 @@ function Editor(): React.JSX.Element {
               <Slider
                 value={[config.outlineThickness ?? 1]}
                 onValueChange={(val) => handleChange("outlineThickness", val[0])}
-                min={1}
+                min={0.1}
                 max={10}
-                step={1}
+                step={0.1}
               />
             </div>
             <div className="gap-2 flex flex-col">
