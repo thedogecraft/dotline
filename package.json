@@ -1,7 +1,7 @@
 {
   "name": "dotline",
   "packageManager": "pnpm@10.33.2",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "A modern crosshair overlay.",
   "main": "./out/main/index.js",
   "author": "Parcoil",
