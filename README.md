@@ -49,6 +49,10 @@
 - Linux: ✅ (Tested on the following distributions)
   - Arch Linux on KDE
   - CachyOS on KDE
+
+> [!CAUTION]
+> Linux support is very experimental. Use X11 if possible, as Wayland may not work properly. Updates and package updates may also break functionality for some users.
+
 - MacOS ⚠️ (Seems to work. must build yourself, tested on MacOS sequoia)
 
 > [!WARNING]  
@@ -62,7 +66,7 @@
 
 #### ⚠️ if the crosshair disapears in game try setting the game to windowed fullscreen mode.
 
-### 🎯 Adding Preset Crosshairs
+### Adding Preset Crosshairs
 
 Preset crosshairs are located in `src/renderer/src/lib/presets.ts`.
 
@@ -86,35 +90,36 @@ Example:
 }
 ```
 
-## 🛠️ Building Dotline
+## Building Dotline
 
 ### Prerequisites
 
-- Node.js v22
+- Node.js v24
 - pnpm
-- a 64-bit version of Windows, Linux or MacOS
 
 ### Install
 
 ```bash
-$ pnpm install
+pnpm install
 ```
 
 ### Development
 
 ```bash
-$ pnpm dev
+pnpm dev
 ```
 
 ### Build
 
 ```bash
 # For windows
-$ pnpm build:win
-
+pnpm build:win
+```
+```bash
 # For macOS
-$ pnpm build:mac
-
+pnpm build:mac
+```
+```bash
 # For Linux
-$ pnpm build:linux
+pnpm build:linux
 ```
