@@ -108,7 +108,11 @@
       "artifactName": "${name}-${version}-setup.${ext}",
       "shortcutName": "${productName}",
       "uninstallDisplayName": "${productName}",
-      "createDesktopShortcut": "always"
+      "createDesktopShortcut": "always",
+      "oneClick": false,
+      "installerSidebar": "build/dotlineinstallerleftsidebar.bmp",
+      "uninstallerSidebar": "build/dotlineinstallerleftsidebar.bmp",
+      "installerHeader": "build/dotlineinstallerheader.bmp"
     },
     "mac": {
       "entitlementsInherit": "build/entitlements.mac.plist",
