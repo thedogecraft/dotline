@@ -7,7 +7,7 @@ arch=('x86_64')
 url="https://github.com/Parcoil/dotline"
 license=('MIT')
 depends=('nodejs')
-makedepends=('npm')
+makedepends=('npm' 'pnpm')
 conflicts=('dotline-bin' 'dotline-git')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/Parcoil/dotline/archive/refs/tags/v$pkgver.tar.gz"
         "$pkgname.sh"
