@@ -33,6 +33,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { OverlayProvider } from "@/hooks/overlay"
 import { CrosshairConfigProvider } from "@/hooks/crosshair-config"
 import Markdown from "react-markdown"
+import rehypeRaw from "rehype-raw"
 
 function Overlay(): React.JSX.Element {
   const [config, setConfig] = useState<CrosshairConfig>(defaultConfig)
@@ -215,6 +216,17 @@ function Layout(): React.JSX.Element {
     toast.success(`Imported "${item.name}" from file`)
   }
 
+  const imgComponent = ({
+    src,
+    alt,
+    className
+  }: {
+    src?: string
+    alt?: string
+    className?: string
+  }): React.JSX.Element => (
+    <img src={src} alt={alt} className={`max-w-full h-auto rounded-md my-2 ${className ?? ""}`} />
+  )
   return (
     <div className="flex flex-col h-screen">
       <Titlebar />
@@ -279,8 +291,10 @@ function Layout(): React.JSX.Element {
             <DialogTitle>Patch Notes for v{packageJson.version}</DialogTitle>
 
             <div className="max-h-[60vh] overflow-y-auto pr-2">
-              <div className="prose m-0 p-0 prose-headings:m-0 prose-headings:text-2xl prose-headings:text-primary prose-paragraph:mb-2 dark:prose-invert prose-ul:m-0 prose-li:m-0">
-                <Markdown>{patchNotes}</Markdown>
+              <div className="prose m-0 p-0 prose-headings:m-0 prose-headings:text-primary prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-paragraph:mb-2 dark:prose-invert prose-ul:m-0 prose-li:m-0">
+                <Markdown rehypePlugins={[rehypeRaw]} components={{ img: imgComponent }}>
+                  {patchNotes}
+                </Markdown>
               </div>
             </div>
           </DialogHeader>
