@@ -21,10 +21,20 @@ let currentHotkey = HOTKEY_DEFAULT
 const hotkeyFilePath = join(app.getPath("userData"), "hotkey.json")
 const settingsFilePath = join(app.getPath("userData"), "settings.json")
 
-function readSettingsSync(): { gsyncCompat?: boolean; autoUpdate?: boolean } {
+type Settings = { disableHardwareAccel?: boolean; autoUpdate?: boolean }
+
+function readSettingsSync(): Settings {
   try {
     if (existsSync(settingsFilePath)) {
-      return JSON.parse(readFileSync(settingsFilePath, "utf-8"))
+      const settings: Settings & { gsyncCompat?: boolean } = JSON.parse(
+        readFileSync(settingsFilePath, "utf-8")
+      )
+      if (settings.gsyncCompat !== undefined && settings.disableHardwareAccel === undefined) {
+        settings.disableHardwareAccel = settings.gsyncCompat
+        delete settings.gsyncCompat
+        fs.writeFile(settingsFilePath, JSON.stringify(settings), "utf-8").catch(() => {})
+      }
+      return settings
     }
   } catch {
     // ignore invalid settings
@@ -33,7 +43,7 @@ function readSettingsSync(): { gsyncCompat?: boolean; autoUpdate?: boolean } {
 }
 
 const savedSettings = readSettingsSync()
-if (savedSettings.gsyncCompat) {
+if (savedSettings.disableHardwareAccel) {
   app.disableHardwareAcceleration()
 }
 
@@ -366,12 +376,12 @@ ipcMain.handle("hotkey:load", async () => {
   return HOTKEY_DEFAULT
 })
 
-ipcMain.handle("settings:get-gsync-compat", () => {
-  return savedSettings.gsyncCompat === true
+ipcMain.handle("settings:get-disable-hardware-accel", () => {
+  return savedSettings.disableHardwareAccel === true
 })
 
-ipcMain.handle("settings:set-gsync-compat", async (_event, value: boolean) => {
-  savedSettings.gsyncCompat = value
+ipcMain.handle("settings:set-disable-hardware-accel", async (_event, value: boolean) => {
+  savedSettings.disableHardwareAccel = value
   await fs.writeFile(settingsFilePath, JSON.stringify(savedSettings), "utf-8")
   return true
 })

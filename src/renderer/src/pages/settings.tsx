@@ -10,7 +10,7 @@ function Settings(): React.JSX.Element {
   const [rpcEnabled, setRpcEnabled] = useState<boolean>(true)
   const [checking, setChecking] = useState(false)
   const [hotkey, setHotkey] = useState("CommandOrControl+Shift+X")
-  const [gsyncCompat, setGsyncCompat] = useState<boolean>(false)
+  const [disableHardwareAccel, setDisableHardwareAccel] = useState<boolean>(false)
   const [autoUpdate, setAutoUpdate] = useState<boolean>(true)
   const [crash, setCrash] = useState(false)
 
@@ -28,8 +28,8 @@ function Settings(): React.JSX.Element {
 
   useEffect(() => {
     window.electron.ipcRenderer
-      .invoke("settings:get-gsync-compat")
-      .then(setGsyncCompat)
+      .invoke("settings:get-disable-hardware-accel")
+      .then(setDisableHardwareAccel)
       .catch(() => {})
   }, [])
 
@@ -40,9 +40,9 @@ function Settings(): React.JSX.Element {
       .catch(() => {})
   }, [])
 
-  const handleToggleGsync = async (checked: boolean): Promise<void> => {
-    setGsyncCompat(checked)
-    await window.electron.ipcRenderer.invoke("settings:set-gsync-compat", checked)
+  const handleToggleHardwareAccel = async (checked: boolean): Promise<void> => {
+    setDisableHardwareAccel(checked)
+    await window.electron.ipcRenderer.invoke("settings:set-disable-hardware-accel", checked)
     toast.success("Restart required for this change to take effect.")
   }
 
@@ -118,12 +118,15 @@ function Settings(): React.JSX.Element {
         <CardContent>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <Label>G-Sync Compatibility Mode</Label>
+              <Label>Disable Hardware Acceleration</Label>
               <p className="text-sm text-muted-foreground">
-                Disables GPU acceleration to prevent G-Sync conflicts with games. Requires restart.
+                Disables GPU acceleration to prevent conflicts with games. Requires restart.
               </p>
             </div>
-            <Switch checked={gsyncCompat} onCheckedChange={(v) => handleToggleGsync(!!v)} />
+            <Switch
+              checked={disableHardwareAccel}
+              onCheckedChange={(v) => handleToggleHardwareAccel(!!v)}
+            />
           </div>
         </CardContent>
       </Card>
