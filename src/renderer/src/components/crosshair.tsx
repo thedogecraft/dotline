@@ -13,6 +13,42 @@ export function Crosshair({
       ? hexToRgba(config.outlineColor, config.outlineOpacity ?? 1)
       : undefined
 
+  const renderBox = (
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    strokeWidth: number,
+    rotate?: number
+  ): React.JSX.Element => {
+    const transform = rotate ? `rotate(${rotate} ${center} ${center})` : undefined
+    return (
+      <>
+        {config.outline && config.outlineColor && (
+          <rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            fill="none"
+            stroke={hexToRgba(config.outlineColor, config.outlineOpacity ?? 1)}
+            strokeWidth={strokeWidth + 2 * (config.outlineThickness ?? 1)}
+            transform={transform}
+          />
+        )}
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill="none"
+          stroke={colorWithOpacity}
+          strokeWidth={strokeWidth}
+          transform={transform}
+        />
+      </>
+    )
+  }
   const renderRect = (
     x: number,
     y: number,
@@ -223,6 +259,60 @@ export function Crosshair({
               config.thickness,
               config.length,
               -45
+            )}
+          </>
+        )}
+
+        {config.style === "t" && (
+          <>
+            {renderRect(
+              center - config.gap - config.length,
+              center - config.thickness / 2,
+              config.length,
+              config.thickness
+            )}
+            {renderRect(
+              center + config.gap,
+              center - config.thickness / 2,
+              config.length,
+              config.thickness
+            )}
+            {renderRect(
+              center - config.thickness / 2,
+              center - config.gap - config.length,
+              config.thickness,
+              config.length
+            )}
+          </>
+        )}
+
+        {config.style === "chevron" && (
+          <>
+            {renderRect(
+              center - config.thickness / 2,
+              center + config.gap,
+              config.thickness,
+              config.length,
+              45
+            )}
+            {renderRect(
+              center - config.thickness / 2,
+              center + config.gap,
+              config.thickness,
+              config.length,
+              -45
+            )}
+          </>
+        )}
+
+        {config.style === "square" && (
+          <>
+            {renderBox(
+              center - (config.gap + Math.max(2, config.length)),
+              center - (config.gap + Math.max(2, config.length)),
+              (config.gap + Math.max(2, config.length)) * 2,
+              (config.gap + Math.max(2, config.length)) * 2,
+              config.thickness
             )}
           </>
         )}

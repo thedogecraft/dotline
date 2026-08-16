@@ -441,6 +441,9 @@ function Editor(): React.JSX.Element {
               <SelectItem value="dot">Dot</SelectItem>
               <SelectItem value="circle">Circle</SelectItem>
               <SelectItem value="x">X</SelectItem>
+              <SelectItem value="t">T</SelectItem>
+              <SelectItem value="chevron">Chevron</SelectItem>
+              <SelectItem value="square">Square</SelectItem>
               <SelectItem value="image">Image</SelectItem>
             </SelectContent>
           </Select>

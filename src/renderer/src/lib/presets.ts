@@ -210,5 +210,44 @@ export const presets: { name: string; config: CrosshairConfig }[] = [
       opacity: 1,
       creator: "FuelClock"
     }
+  },
+  {
+    name: "Cyan T Reticle",
+    config: {
+      ...defaultConfig,
+      style: "t",
+      color: "#22d3ee",
+      thickness: 2,
+      length: 6,
+      gap: 3,
+      creator: "Parcoil"
+    }
+  },
+  {
+    name: "Silver Chevron",
+    config: {
+      ...defaultConfig,
+      style: "chevron",
+      color: "#e5e7eb",
+      thickness: 3,
+      length: 10,
+      gap: 0,
+      outline: true,
+      outlineColor: "#000000",
+      outlineThickness: 1,
+      outlineOpacity: 1,
+      creator: "Parcoil"
+    }
+  },
+  {
+    name: "Red Square",
+    config: {
+      ...defaultConfig,
+      style: "square",
+      color: "#ef4444",
+      thickness: 2,
+      gap: 4,
+      creator: "Parcoil"
+    }
   }
 ]

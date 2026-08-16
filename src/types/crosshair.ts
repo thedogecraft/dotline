@@ -1,4 +1,12 @@
-export type CrosshairStyle = "classic" | "dot" | "circle" | "x" | "image"
+export type CrosshairStyle =
+  | "classic"
+  | "dot"
+  | "circle"
+  | "x"
+  | "image"
+  | "t"
+  | "chevron"
+  | "square"
 
 export type CrosshairConfig = {
   enabled: boolean

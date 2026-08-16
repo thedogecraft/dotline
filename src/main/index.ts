@@ -263,7 +263,16 @@ async function handleOpenedDotlineFile(filePath: string): Promise<void> {
     const parsed = JSON.parse(raw)
     if (!parsed || typeof parsed !== "object") return
 
-    const allowedStyles: CrosshairStyle[] = ["classic", "dot", "circle", "x", "image"]
+    const allowedStyles: CrosshairStyle[] = [
+      "classic",
+      "dot",
+      "circle",
+      "x",
+      "t",
+      "chevron",
+      "square",
+      "image"
+    ]
     const isWrapped = "config" in parsed && parsed.config && typeof parsed.config === "object"
     const source = isWrapped ? parsed.config : parsed
     const importedName: string | undefined = isWrapped ? parsed.name : undefined
@@ -486,7 +495,16 @@ ipcMain.handle("config:import", async () => {
 
     if (!parsed || typeof parsed !== "object") return null
 
-    const allowedStyles: CrosshairStyle[] = ["classic", "dot", "circle", "x", "image"]
+    const allowedStyles: CrosshairStyle[] = [
+      "classic",
+      "dot",
+      "circle",
+      "x",
+      "t",
+      "chevron",
+      "square",
+      "image"
+    ]
 
     // Support both wrapped { name, config } and plain config formats
     const isWrapped = "config" in parsed && parsed.config && typeof parsed.config === "object"
