@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap");
+@import "@fontsource-variable/plus-jakarta-sans";
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -43,7 +43,7 @@
   --sidebar-accent-foreground: oklch(0.4 0.12 150);
   --sidebar-border: oklch(0.9 0.008 155);
   --sidebar-ring: oklch(0.62 0.17 150);
-  --font-sans: Poppins, sans-serif;
+  --font-sans: "Plus Jakarta Sans Variable", sans-serif;
   --font-serif: serif;
   --font-mono: Roboto Mono, monospace;
   --radius: 0.85rem;
@@ -92,9 +92,9 @@
   --sidebar-accent-foreground: oklch(0.75 0.18 150);
   --sidebar-border: oklch(0.22 0.015 155);
   --sidebar-ring: oklch(0.7 0.19 150);
-  --font-sans: Poppins, sans-serif;
+  /* --font-sans: Poppins, sans-serif;
   --font-serif: serif;
-  --font-mono: Roboto Mono, monospace;
+  --font-mono: Roboto Mono, monospace; */
   --radius: 0.85rem;
   --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.08);
   --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.12);
