@@ -61,10 +61,10 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       electron:
-        specifier: ^37.10.3
+        specifier: ^37.2.3
         version: 37.10.3
       electron-builder:
-        specifier: ^26.15.3
+        specifier: ^26.8.1
         version: 26.15.3(electron-builder-squirrel-windows@26.15.3)
       electron-vite:
         specifier: ^5.0.0
@@ -7490,11 +7490,11 @@ snapshots:
 
   node-abi@4.35.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-api-version@0.2.1:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   node-exports-info@1.6.2:
     dependencies:
@@ -7510,7 +7510,7 @@ snapshots:
       graceful-fs: 4.2.11
       nopt: 9.0.0
       proc-log: 6.1.0
-      semver: 7.7.4
+      semver: 7.8.5
       tar: 7.5.22
       tinyglobby: 0.2.17
       undici: 6.28.1
